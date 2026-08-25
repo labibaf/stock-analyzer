@@ -140,7 +140,7 @@ Project ini dilisensikan di bawah lisensi [MIT License](LICENSE) — bebas digun
 
 ## 👤 Author & Creator
 
-Dibuat dengan ❤️ oleh **Labib ([@labibaf](https://github.com/labibaf))**.
+Dibuat dengan ❤️ oleh **LabibAF ([@labibaf](https://github.com/labibaf))**.
 
 - 🌐 Live App: [stock-analyzer-laf.vercel.app](https://stock-analyzer-laf.vercel.app/)
 - 🐙 GitHub: [github.com/labibaf](https://github.com/labibaf)

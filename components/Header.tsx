@@ -127,7 +127,7 @@ export default function Header({
         {/* Ticker Quick Chips Bar */}
         <div className="flex items-center gap-1.5 overflow-x-auto pt-2.5 pb-0.5 no-scrollbar text-xs border-t border-[#141d30] mt-2.5">
           <span className="text-slate-500 text-[11px] font-semibold whitespace-nowrap mr-1">
-            Likuid:
+            Top Stocks:
           </span>
           {POPULAR_IDX_STOCKS.map((stock) => {
             const isSelected = currentTicker.toUpperCase() === stock.ticker;
