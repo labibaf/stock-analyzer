@@ -14,6 +14,7 @@ import TechnicalIndicatorsTable from '@/components/TechnicalIndicatorsTable';
 import AISettingsModal, { getStoredUserAIConfig } from '@/components/AISettingsModal';
 import { AI_PROVIDERS, AIProviderId } from '@/lib/ai-config';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { GithubIcon } from '@/components/icons/GithubIcon';
 
 export default function HomePage() {
   const [ticker, setTicker] = useState('BBCA');
@@ -265,12 +266,31 @@ export default function HomePage() {
               />
             </div>
             <span>
-              <strong>IDX Swing Analyzer</strong> • © {new Date().getFullYear()} <strong>LAF</strong>. All rights reserved.
+              <strong>IDX Swing Analyzer</strong> • © {new Date().getFullYear()}{' '}
+              <a
+                href="https://github.com/labibaf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-300 hover:text-sky-400 font-semibold underline underline-offset-2 transition-colors"
+              >
+                Labib
+              </a>
+              . Open Source Project.
             </span>
           </div>
 
-          <div className="text-slate-500 text-center sm:text-right">
-            <span>Only Research, Not Financial Advice</span>
+          <div className="flex items-center gap-3 text-slate-400">
+            <a
+              href="https://github.com/labibaf/stock-analyzer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#101726] border border-[#1d273f] hover:border-slate-500 hover:text-white transition-all"
+            >
+              <GithubIcon className="w-3.5 h-3.5" />
+              <span>GitHub Repository</span>
+            </a>
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="text-slate-500 hidden sm:inline">Riset & Edukasi Swing Saham (DYOR)</span>
           </div>
         </div>
       </footer>

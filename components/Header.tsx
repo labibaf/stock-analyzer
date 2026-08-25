@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Search, Sparkles, Cpu, Settings } from 'lucide-react';
+import { GithubIcon } from '@/components/icons/GithubIcon';
 import { POPULAR_IDX_STOCKS } from '@/lib/idx-rules';
 
 interface HeaderProps {
@@ -98,7 +99,7 @@ export default function Header({
               {hasCustomKey || isAIGenerated ? (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>AI: {activeProviderName || 'Gemini'}</span>
+                  <span>Connected to Model: {activeProviderName || 'Gemini'}</span>
                 </>
               ) : (
                 <>
@@ -108,6 +109,18 @@ export default function Header({
               )}
               <Settings className="w-3 h-3 text-slate-400 ml-0.5 opacity-70" />
             </button>
+
+            {/* GitHub Repo Button */}
+            <a
+              href="https://github.com/labibaf/stock-analyzer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border bg-[#0d121f] hover:bg-[#141b2c] border-[#1c273f] hover:border-slate-500 text-slate-300 hover:text-white text-[11px] font-semibold transition-all shrink-0"
+              title="Lihat Source Code di GitHub"
+            >
+              <GithubIcon className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">GitHub</span>
+            </a>
           </div>
         </div>
 

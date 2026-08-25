@@ -1,122 +1,118 @@
 # 📈 IDX Swing Analyzer & Trading Copilot
 
-Aplikasi web modern analisis swing trading saham **Bursa Efek Indonesia (BEI / IHSG)** dengan engine kalkulasi teknikal deterministik presisi, kalkulator manajemen lot & risiko portofolio, chart TradingView multi-timeframe interaktif, serta sintesis naratif bertenaga AI (Google Gemini).
+<div align="center">
+
+![IDX Swing Analyzer Logo](public/logo.png)
+
+### Platform Analisis Swing Trading Saham Indonesia (IHSG / BEI) Modern & AI Copilot Bertenaga BYOK
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-stock--analyzer--laf.vercel.app-00dfa2?style=for-the-badge&logo=vercel)](https://stock-analyzer-laf.vercel.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-labibaf%2Fstock--analyzer-181717?style=for-the-badge&logo=github)](https://github.com/labibaf/stock-analyzer)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+
+**[🌐 Buka Aplikasi Live Demo](https://stock-analyzer-laf.vercel.app/)** • **[⭐ Beri Bintang di GitHub](https://github.com/labibaf/stock-analyzer)**
+
+</div>
 
 ---
 
-## 🌟 Fitur Utama
+## 📖 Tentang Project
 
-- 🎯 **Plan Swing Trading Otomatis**: Menentukan *Area Beli (Buy Zone)*, *Target Profit 1 (TP1)*, *Target Profit 2 (TP2)*, dan *Stop Loss (Cut Loss)* objektif berbasis level support/resistance dan rata-rata volatilitas harian (ATR 14).
-- ⏱️ **Dynamic Time Horizon**: Estimasi durasi *holding period* bursa (misal: `3 - 7 hari bursa (Fast Momentum)`, `5 - 12 hari (Pullback)`, `8 - 18 hari (Base Breakout)`) yang dihitung secara matematis.
-- 🎚️ **Kalkulator Lot & Manajemen Risiko Portofolio**:
-  - **Mode Otomatis (Berdasar Risiko)**: Menghitung alokasi lot presisi berdasarkan toleransi risiko per trade (0.1% - 20%) dan dikunci aman pada 100% kapasitas modal tunai cash (*Cash Buying Power*).
-  - **Mode Manual (Input Lot)**: Stepper lot interaktif dengan estimasi skenario rugi/untung bersih dan simulasi fee broker IDX (~0.15% beli, 0.25% jual).
-- 📊 **Konsensus Sinyal Indikator (11 Indikator)**:
-  - Rangkuman sinyal objektif: **🟢 X BUY**, **⚪ Y NEUTRAL**, **🔴 Z SELL**.
-  - Visual Bar Meter persentase Bullish vs Bearish (TradingView Style) mencakup EMA 20/50/200, MA Alignment, RSI 14, Stochastic (14,3,3), MACD, MFI 14, Bollinger Bands, Volume Spike, dan Pola Candlestick.
-- 🕯️ **Interactive TradingView Candlestick Chart**:
-  - Multi-Timeframe interaktif: **`15m`** (Intraday), **`1h`** (Short Swing), **`1D`** (Harian), **`1W`** (Mingguan), dan **`1M`** (Bulanan).
-  - Overlay EMA 20 (Amber), EMA 50 (Cyan), EMA 200 (Purple), Bollinger Bands 20,2 (Squeeze detection), serta garis horizontal SL/TP.
-- 🤖 **AI Copilot Synthesis (Anti-Halusinasi)**:
-  - Sintesis analisa bertenaga **Google Gemini Free API** yang bertumpu pada data teknikal matematis terverifikasi.
-  - *Algorithmic Fallback Engine*: Aplikasi tetap berfungsi 100% normal meskipun tanpa API key Gemini.
+**IDX Swing Analyzer** adalah aplikasi web *open-source* yang dirancang khusus untuk mempermudah trader saham di **Bursa Efek Indonesia (BEI / IHSG)** dalam merencanakan swing trading secara presisi, objektif, dan terukur.
+
+Aplikasi ini menggabungkan **Engine Kalkulasi Teknis Deterministik (100% Matematika)** dengan **AI Copilot Synthesis** berbasis arsitektur **Bring Your Own Key (BYOK)**, sehingga pengguna dapat menghubungkan API Key AI pilihan mereka sendiri secara aman dan gratis tanpa membebani server *host*.
 
 ---
 
-## 🚀 Panduan Deploy ke Vercel (Langkah demi Langkah)
+## ✨ Fitur Unggulan
 
-Aplikasi ini dibangun menggunakan **Next.js 16 (App Router)** dan siap di-deploy ke Vercel dalam hitungan menit secara gratis.
+### 1. 🎯 Plan Swing Trading & Dynamic Time Horizon
+- Menghitung **Area Beli (*Buy Zone*)**, **Target Profit 1 (TP1)**, **Target Profit 2 (TP2)**, dan level **Stop Loss (*Cut Loss*)** objektif berbasis level *Support/Resistance* dan volatilitas harian (*ATR 14*).
+- **Dynamic Time Horizon**: Durasi perkiraan *holding period* dihitung matematis berdasarkan jarak target dan tipe setup (contoh: `3 - 7 hari bursa (Fast Momentum)`, `5 - 12 hari (Pullback)`, `8 - 18 hari (Base Breakout)`).
 
-### Opsi 1: Deploy via GitHub & Vercel Dashboard (Direkomendasikan)
+### 2. 🎚️ Kalkulator Manajemen Lot & Risiko Portofolio
+- **Mode Otomatis (Berdasar Risiko)**: Menentukan jumlah lot ideal berdasarkan toleransi risiko per trade (0.1% - 20%) dan secara otomatis dikunci maksimal **100% modal tunai (*Cash Buying Power*)** agar terhindar dari *over-trading*.
+- **Mode Manual (Input Lot)**: Stepper lot interaktif dengan estimasi skenario cut loss/target profit bersih serta simulasi fee broker IDX (~0.15% beli, 0.25% jual).
 
-1. **Push Project ke Repository GitHub**:
-   Jika belum di-push ke GitHub:
-   ```bash
-   git add .
-   git commit -m "feat: ready for production deployment"
-   # Buat repository baru di github.com, lalu hubungkan:
-   git remote add origin https://github.com/USERNAME/stock-analyzer.git
-   git branch -M main
-   git push -u origin main
-   ```
+### 3. 📊 Konsensus Sinyal Indikator (11 Indikator)
+- Rangkuman sinyal deterministik terverifikasi: **🟢 BUY**, **⚪ NEUTRAL**, **🔴 SELL**.
+- *Visual Bar Meter* (TradingView Style) merangkum 11 indikator: **EMA 20, EMA 50, EMA 200, MA Trend Alignment, RSI 14, Stochastic (14,3,3), MACD, Money Flow Index (MFI 14), Bollinger Bands, Volume Surge, dan Pola Candlestick**.
 
-2. **Buka Dashboard Vercel**:
-   - Masuk ke [vercel.com](https://vercel.com) dan login dengan akun GitHub kamu.
-   - Klik tombol **"Add New..."** ➔ pilih **"Project"**.
-   - Pilih repository `stock-analyzer` yang baru kamu push, lalu klik **"Import"**.
+### 4. 🕯️ Interactive TradingView Multi-Timeframe Chart
+- Chart candlestick interaktif berkecepatan tinggi dengan dukungan multi-timeframe:
+  - **`15m`** (Intraday Momentum)
+  - **`1h`** (Short-term Swing)
+  - **`1D`** (Harian / Primary Swing)
+  - **`1W`** (Mingguan / Major Trend)
+  - **`1M`** (Bulanan / Macro Structure)
+- Dilengkapi overlay **EMA 20, EMA 50, EMA 200, Bollinger Bands 20,2 (dengan indikator Volatility Squeeze)**, serta garis penanda level SL dan TP.
 
-3. **Konfigurasi Project Settings**:
-   - **Framework Preset**: `Next.js` (terdeteksi otomatis).
-   - **Root Directory**: `./` (default).
-   - **Build Command**: `next build` (default).
-   - **Output Directory**: `.next` (default).
-
-4. **Konfigurasi AI (BYOK - Bring Your Own Key)**:
-   Aplikasi ini mendukung mode **BYOK (Bring Your Own Key)** di mana setiap pengguna bisa memasukkan API Key AI pribadi mereka langsung melalui tombol **"⚙️ AI Settings"** di header aplikasi!
-   
-   **Provider AI yang Didukung:**
-   - 🟢 **Google Gemini** (Free Tier): `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`
-   - ⚡ **Groq Cloud** (Free Tier Super Cepat): `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`
-   - 🌐 **OpenRouter** (Multi-Model Hub): `deepseek/deepseek-chat`, `meta-llama/llama-3.3-70b`
-   - 🤖 **OpenAI**: `gpt-4o-mini`, `gpt-4o`
-   - 🧠 **Anthropic Claude**: `claude-3-5-haiku`, `claude-3-5-sonnet`
-
-   *(Catatan: Anda juga dapat memasukkan `GEMINI_API_KEY` di Environment Variables Vercel sebagai default fallback jika diinginkan).*
-
-5. **Klik "Deploy"**:
-   - Tunggu proses build selama ~1 menit.
-   - Vercel akan memberikan link domain live gratis, misalnya: `https://stock-analyzer-xxx.vercel.app`. 🎉
+### 5. 🤖 AI Model (Bring Your Own Key - BYOK)
+- Pengguna dapat memasukkan API Key AI pribadi mereka langsung di aplikasi.
+- **Provider AI yang didukung:**
+  - 🟢 **Google Gemini** (Free Tier): `gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-2.0-flash`
+  - ⚡ **Groq Cloud** (Free Tier): `llama-3.3-70b-versatile`, `deepseek-r1-distill-llama-70b`
+  - 🌐 **OpenRouter**: `deepseek/deepseek-chat`, `meta-llama/llama-3.3-70b`
+  - 🤖 **OpenAI**: `gpt-4o-mini`, `gpt-4o`, `o3-mini`
+  - 🧠 **Anthropic Claude**: `claude-3-7-sonnet-latest`, `claude-3-5-haiku-latest`
+- 🔒 **100% Aman**: API Key hanya tersimpan di `localStorage` browser pengguna, tidak pernah dikirim ke database pihak ketiga.
+- 🛡️ **Algorithmic Fallback**: Aplikasi tetap berfungsi 100% normal meskipun tanpa API Key AI.
 
 ---
 
-### Opsi 2: Deploy Cepat via Vercel CLI
+## 🛠️ Arsitektur & Tech Stack
 
-Jika kamu menyukai terminal:
+```mermaid
+graph TD
+    Client[Browser Frontend: Next.js + React + Tailwind] -->|Fetch Data| API[Next.js Serverless API Route: /api/analyze]
+    API -->|Live Candles & Quotes| YF[Yahoo Finance API]
+    API -->|Deterministic Math| MathEngine[Technical Analysis & Risk Engine]
+    API -->|Optional User BYOK Key| AIService[Google Gemini / Groq / OpenAI / Claude]
+    MathEngine & AIService --> API
+    API -->|Unified JSON Payload| Client
+    Client --> TVChart[TradingView Lightweight Charts 5]
+    Client --> Calc[Position Sizing Calculator]
+```
 
-1. Install Vercel CLI global:
-   ```bash
-   npm i -g vercel
-   ```
-
-2. Login ke akun Vercel:
-   ```bash
-   vercel login
-   ```
-
-3. Jalankan perintah deploy dari folder project:
-   ```bash
-   vercel
-   ```
-   *(Ikuti petunjuk di terminal: pilih scope, set project name, tekan enter untuk default settings).*
-
-4. Untuk deploy ke production domain:
-   ```bash
-   vercel --prod
-   ```
+- **Framework**: [Next.js 16 (App Router + Turbopack)](https://nextjs.org/)
+- **Language**: [TypeScript 5](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Charting**: [TradingView Lightweight Charts 5](https://tradingview.github.io/lightweight-charts/)
+- **Market Data Engine**: Yahoo Finance (`yahoo-finance2`)
+- **Icons**: [Lucide React](https://lucide.dev/)
 
 ---
 
-## 💻 Menjalankan di Komputer Lokal (Local Development)
+## 💻 Panduan Menjalankan di Komputer Lokal
 
-1. **Clone repository & install dependencies**:
+### Prasyarat
+- [Node.js](https://nodejs.org/) versi 18.18 atau lebih baru.
+- npm / yarn / pnpm / bun.
+
+### Langkah Instalasi
+
+1. **Clone repository ini:**
    ```bash
-   git clone https://github.com/USERNAME/stock-analyzer.git
+   git clone https://github.com/labibaf/stock-analyzer.git
    cd stock-analyzer
+   ```
+
+2. **Install dependensi:**
+   ```bash
    npm install
    ```
 
-2. **Buat file konfigurasi `.env.local` (opsional)**:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-
-3. **Jalankan development server**:
+3. **Jalankan development server:**
    ```bash
    npm run dev
    ```
-   Buka browser di [http://localhost:3000](http://localhost:3000).
 
-4. **Uji coba build produksi**:
+4. **Buka di browser:**
+   Akses `http://localhost:3000`.
+
+5. **Build untuk produksi:**
    ```bash
    npm run build
    npm run start
@@ -124,18 +120,33 @@ Jika kamu menyukai terminal:
 
 ---
 
-## 🛠️ Tech Stack & Library
+## 🤝 Kontribusi (Contributing)
 
-- **Framework**: [Next.js 16 (Turbopack, App Router)](https://nextjs.org/)
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 4
-- **Charts**: [TradingView Lightweight Charts 5](https://tradingview.github.io/lightweight-charts/)
-- **Market Data**: Yahoo Finance API (`yahoo-finance2`)
-- **AI Model**: Google Gemini API (`@google/genai`)
-- **Icons**: [Lucide React](https://lucide.dev/)
+Kontribusi sangat disambut baik! Jika kamu ingin menambahkan fitur baru, memperbaiki bug, atau meningkatkan algoritma analisis:
+
+1. Fork repository ini: [github.com/labibaf/stock-analyzer](https://github.com/labibaf/stock-analyzer)
+2. Buat branch fitur baru (`git checkout -b feature/FiturKeren`)
+3. Commit perubahanmu (`git commit -m 'feat: tambah fitur keren'`)
+4. Push ke branch (`git push origin feature/FiturKeren`)
+5. Buka **Pull Request** di GitHub.
+
+---
+
+## 📄 Lisensi
+
+Project ini dilisensikan di bawah lisensi [MIT License](LICENSE) — bebas digunakan, dimodifikasi, dan dikembangkan kembali untuk keperluan pribadi maupun komersial.
+
+---
+
+## 👤 Author & Creator
+
+Dibuat dengan ❤️ oleh **Labib ([@labibaf](https://github.com/labibaf))**.
+
+- 🌐 Live App: [stock-analyzer-laf.vercel.app](https://stock-analyzer-laf.vercel.app/)
+- 🐙 GitHub: [github.com/labibaf](https://github.com/labibaf)
 
 ---
 
 ## ⚠️ Disclaimer Finansial
 
-Aplikasi ini dibuat murni untuk tujuan **riset, edukasi, dan kalkulasi alat bantu teknikal saham**. Seluruh parameter, sinyal, dan skenario yang dihasilkan bukanlah ajakan mutlak untuk membeli atau menjual efek tertentu. Keputusan investasi dan trading sepenuhnya berada di tangan masing-masing trader (*Do Your Own Research / DYOR*).
+Aplikasi ini dikembangkan untuk **tujuan edukasi, riset, dan alat bantu kalkulasi teknikal saham semata**. Seluruh data harga, skenario swing, dan rekomendasi yang dihasilkan bukanlah ajakan mutlak untuk membeli atau menjual instrumen finansial tertentu. Segala keputusan transaksi pasar modal sepenuhnya merupakan tanggung jawab masing-masing individu (*Do Your Own Research / DYOR*).
