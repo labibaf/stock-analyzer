@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { SwingAnalysisResult } from '@/lib/types';
 import Header from '@/components/Header';
 import Scorecard from '@/components/Scorecard';
@@ -12,7 +13,7 @@ import FundamentalStatsCard from '@/components/FundamentalStatsCard';
 import TechnicalIndicatorsTable from '@/components/TechnicalIndicatorsTable';
 import AISettingsModal, { getStoredUserAIConfig } from '@/components/AISettingsModal';
 import { AI_PROVIDERS, AIProviderId } from '@/lib/ai-config';
-import { AlertTriangle, RefreshCw, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function HomePage() {
   const [ticker, setTicker] = useState('BBCA');
@@ -253,8 +254,16 @@ export default function HomePage() {
       {/* Footer & Disclaimer */}
       <footer className="border-t border-[#141d30] bg-[#07080c] mt-8 py-4 text-slate-500 text-xs">
         <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
+          <div className="flex items-center gap-2">
+            <div className="relative w-5 h-5 rounded overflow-hidden shrink-0 border border-sky-500/30">
+              <Image
+                src="/logo.png"
+                alt="IDX Swing Analyzer"
+                fill
+                sizes="20px"
+                className="object-cover"
+              />
+            </div>
             <span>
               <strong>IDX Swing Analyzer</strong> — Real-time verified market data & deterministic math engine.
             </span>

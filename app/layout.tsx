@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: 'IDX Swing Analyzer | Analisis Saham Indonesia & AI Copilot',
   description:
     'Aplikasi analisis swing trading saham Bursa Efek Indonesia (IHSG / IDX) dengan kalkulasi indikator teknikal deterministik dan AI Copilot anti-halusinasi.',
+  icons: {
+    icon: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

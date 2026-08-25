@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Search, Sparkles, Cpu, Settings } from 'lucide-react';
 import { POPULAR_IDX_STOCKS } from '@/lib/idx-rules';
 
@@ -41,10 +42,20 @@ export default function Header({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Logo & Product Title */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50" />
-              <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white">
-                IDX <span className="text-sky-400 font-normal">Swing Analyzer</span>
+            <div className="flex items-center gap-2.5">
+              <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-sky-500/30 bg-[#070a12] shadow-sm shadow-sky-500/20 shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="IDX Swing Analyzer Logo"
+                  fill
+                  sizes="32px"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+              <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">
+                <span>IDX</span>
+                <span className="text-sky-400 font-normal">Swing Analyzer</span>
               </h1>
             </div>
             <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#131b2e] border border-[#1f2d4d] text-sky-300">
