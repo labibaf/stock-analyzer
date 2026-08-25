@@ -11,8 +11,11 @@ import {
   CandlePattern,
   RecommendationType,
   SwingActionPlan,
+  TechnicalConsensus,
+  SingleIndicatorSignal,
+  SignalVerdict,
 } from './types';
-import { roundToIDXTick } from './idx-rules';
+import { roundToIDXTick, formatIDR } from './idx-rules';
 
 /**
  * Calculates Exponential Moving Average (EMA)
@@ -502,6 +505,243 @@ export function findSupportResistanceLevels(
 }
 
 /**
+ * Computes individual indicator signals and aggregate consensus (Buy/Sell/Neutral)
+ */
+export function computeTechnicalConsensus(
+  price: number,
+  quote: StockQuote,
+  ema20: number,
+  ema50: number,
+  ema200: number,
+  rsi14: number,
+  macd: MACDResult,
+  stochastic: StochasticResult,
+  bollinger: BollingerBandsResult,
+  mfi14: MFIResult,
+  detectedPattern: CandlePattern | null,
+  volumeRatio20: number
+): TechnicalConsensus {
+  const signals: SingleIndicatorSignal[] = [];
+
+  // 1. Moving Averages
+  const ema20Signal: SignalVerdict = price > ema20 ? 'BUY' : price < ema20 ? 'SELL' : 'NEUTRAL';
+  signals.push({
+    name: 'EMA (20)',
+    category: 'MA',
+    value: formatIDR(ema20),
+    signal: ema20Signal,
+    reason: price > ema20 ? 'Harga di atas EMA 20' : 'Harga di bawah EMA 20',
+  });
+
+  const ema50Signal: SignalVerdict = price > ema50 ? 'BUY' : price < ema50 ? 'SELL' : 'NEUTRAL';
+  signals.push({
+    name: 'EMA (50)',
+    category: 'MA',
+    value: formatIDR(ema50),
+    signal: ema50Signal,
+    reason: price > ema50 ? 'Harga di atas EMA 50' : 'Harga di bawah EMA 50',
+  });
+
+  const ema200Signal: SignalVerdict = price > ema200 ? 'BUY' : price < ema200 ? 'SELL' : 'NEUTRAL';
+  signals.push({
+    name: 'EMA (200)',
+    category: 'MA',
+    value: formatIDR(ema200),
+    signal: ema200Signal,
+    reason: price > ema200 ? 'Uptrend Jangka Panjang' : 'Downtrend di bawah EMA 200',
+  });
+
+  const maCrossSignal: SignalVerdict = ema20 > ema50 ? 'BUY' : ema20 < ema50 ? 'SELL' : 'NEUTRAL';
+  signals.push({
+    name: 'MA Alignment (20/50)',
+    category: 'MA',
+    value: ema20 > ema50 ? 'Bullish' : 'Bearish',
+    signal: maCrossSignal,
+    reason: ema20 > ema50 ? 'EMA 20 berada di atas EMA 50' : 'EMA 20 di bawah EMA 50',
+  });
+
+  // 2. Oscillators & Momentum
+  let rsiSignal: SignalVerdict = 'NEUTRAL';
+  let rsiReason = 'Zona Netral (42-60)';
+  if (rsi14 < 32) {
+    rsiSignal = 'BUY';
+    rsiReason = 'Oversold (Potensi Rebound)';
+  } else if (rsi14 >= 42 && rsi14 <= 65) {
+    rsiSignal = 'BUY';
+    rsiReason = 'Healthy Bullish Momentum';
+  } else if (rsi14 > 70) {
+    rsiSignal = 'SELL';
+    rsiReason = 'Overbought (Rawan Koreksi)';
+  }
+  signals.push({
+    name: 'RSI (14)',
+    category: 'OSCILLATOR',
+    value: `${rsi14}`,
+    signal: rsiSignal,
+    reason: rsiReason,
+  });
+
+  let stochSignal: SignalVerdict = 'NEUTRAL';
+  let stochReason = 'Netral';
+  if (stochastic.crossStatus === 'BULLISH_CROSS' || stochastic.status === 'OVERSOLD') {
+    stochSignal = 'BUY';
+    stochReason = 'Bullish Crossover / Oversold';
+  } else if (stochastic.crossStatus === 'BEARISH_CROSS' || stochastic.status === 'OVERBOUGHT') {
+    stochSignal = 'SELL';
+    stochReason = 'Bearish Cross / Overbought';
+  } else if (stochastic.k > stochastic.d) {
+    stochSignal = 'BUY';
+    stochReason = '%K di atas %D';
+  } else {
+    stochSignal = 'SELL';
+    stochReason = '%K di bawah %D';
+  }
+  signals.push({
+    name: 'Stochastic (14,3,3)',
+    category: 'OSCILLATOR',
+    value: `%K ${stochastic.k} / %D ${stochastic.d}`,
+    signal: stochSignal,
+    reason: stochReason,
+  });
+
+  let macdSignal: SignalVerdict = 'NEUTRAL';
+  let macdReason = 'Netral';
+  if (macd.histogram > 0) {
+    macdSignal = 'BUY';
+    macdReason = 'Histogram Positif (Bullish Momentum)';
+  } else if (macd.histogram < 0) {
+    macdSignal = 'SELL';
+    macdReason = 'Histogram Negatif (Bearish Momentum)';
+  }
+  signals.push({
+    name: 'MACD (12,26,9)',
+    category: 'OSCILLATOR',
+    value: `${macd.histogram > 0 ? '+' : ''}${macd.histogram}`,
+    signal: macdSignal,
+    reason: macdReason,
+  });
+
+  let mfiSignal: SignalVerdict = 'NEUTRAL';
+  let mfiReason = 'Netral';
+  if (mfi14.value < 30) {
+    mfiSignal = 'BUY';
+    mfiReason = 'Oversold Akumulasi Uang Masuk';
+  } else if (mfi14.value >= 50 && mfi14.value <= 80) {
+    mfiSignal = 'BUY';
+    mfiReason = 'Capital Inflow Positif';
+  } else if (mfi14.value > 80) {
+    mfiSignal = 'SELL';
+    mfiReason = 'Overbought Capital Outflow';
+  }
+  signals.push({
+    name: 'MFI (14)',
+    category: 'OSCILLATOR',
+    value: `${mfi14.value}`,
+    signal: mfiSignal,
+    reason: mfiReason,
+  });
+
+  // 3. Volatility & Price Action
+  let bbSignal: SignalVerdict = 'NEUTRAL';
+  let bbReason = 'Didalam Band';
+  if (price <= bollinger.lower * 1.015) {
+    bbSignal = 'BUY';
+    bbReason = 'Dekat Lower Band (Support)';
+  } else if (bollinger.isSqueeze) {
+    bbSignal = 'NEUTRAL';
+    bbReason = 'BB Squeeze (Menunggu Breakout)';
+  } else if (price >= bollinger.upper * 0.99) {
+    bbSignal = 'SELL';
+    bbReason = 'Dekat Upper Band (Resistance)';
+  } else if (price > bollinger.middle) {
+    bbSignal = 'BUY';
+    bbReason = 'Di Atas Middle Band (SMA 20)';
+  }
+  signals.push({
+    name: 'Bollinger Bands (20,2)',
+    category: 'VOLATILITY',
+    value: `BW ${bollinger.bandwidth}%`,
+    signal: bbSignal,
+    reason: bbReason,
+  });
+
+  let volSignal: SignalVerdict = 'NEUTRAL';
+  let volReason = 'Volume Rata-rata';
+  if (volumeRatio20 >= 1.25 && quote.change >= 0) {
+    volSignal = 'BUY';
+    volReason = 'Volume Spike Akumulasi Naik';
+  } else if (volumeRatio20 >= 1.25 && quote.change < 0) {
+    volSignal = 'SELL';
+    volReason = 'Volume Spike Tekanan Jual';
+  }
+  signals.push({
+    name: 'Volume vs 20-SMA',
+    category: 'VOLATILITY',
+    value: `${volumeRatio20}x`,
+    signal: volSignal,
+    reason: volReason,
+  });
+
+  let candleSignal: SignalVerdict = 'NEUTRAL';
+  let candleReason = 'Tanpa Pola Ekstrem';
+  if (detectedPattern?.type === 'BULLISH') {
+    candleSignal = 'BUY';
+    candleReason = `Pola Bullish ${detectedPattern.name}`;
+  } else if (detectedPattern?.type === 'BEARISH') {
+    candleSignal = 'SELL';
+    candleReason = `Pola Bearish ${detectedPattern.name}`;
+  }
+  signals.push({
+    name: 'Pola Candlestick',
+    category: 'VOLATILITY',
+    value: detectedPattern ? detectedPattern.name : 'Normal',
+    signal: candleSignal,
+    reason: candleReason,
+  });
+
+  // Aggregate Counts
+  const totalBuy = signals.filter((s) => s.signal === 'BUY').length;
+  const totalNeutral = signals.filter((s) => s.signal === 'NEUTRAL').length;
+  const totalSell = signals.filter((s) => s.signal === 'SELL').length;
+
+  const maSignals = signals.filter((s) => s.category === 'MA');
+  const maBuy = maSignals.filter((s) => s.signal === 'BUY').length;
+  const maSell = maSignals.filter((s) => s.signal === 'SELL').length;
+  const maNeutral = maSignals.filter((s) => s.signal === 'NEUTRAL').length;
+  const maVerdict: SignalVerdict = maBuy > maSell ? 'BUY' : maSell > maBuy ? 'SELL' : 'NEUTRAL';
+
+  const oscSignals = signals.filter((s) => s.category === 'OSCILLATOR');
+  const oscBuy = oscSignals.filter((s) => s.signal === 'BUY').length;
+  const oscSell = oscSignals.filter((s) => s.signal === 'SELL').length;
+  const oscNeutral = oscSignals.filter((s) => s.signal === 'NEUTRAL').length;
+  const oscVerdict: SignalVerdict = oscBuy > oscSell ? 'BUY' : oscSell > oscBuy ? 'SELL' : 'NEUTRAL';
+
+  let overallRating: 'STRONG_BUY' | 'BUY' | 'NEUTRAL' | 'SELL' | 'STRONG_SELL' = 'NEUTRAL';
+  if (totalBuy >= 7) {
+    overallRating = 'STRONG_BUY';
+  } else if (totalBuy >= 5 && totalBuy > totalSell) {
+    overallRating = 'BUY';
+  } else if (totalSell >= 7) {
+    overallRating = 'STRONG_SELL';
+  } else if (totalSell >= 5 && totalSell > totalBuy) {
+    overallRating = 'SELL';
+  } else {
+    overallRating = 'NEUTRAL';
+  }
+
+  return {
+    totalBuy,
+    totalNeutral,
+    totalSell,
+    totalIndicators: signals.length,
+    overallRating,
+    maRating: { buy: maBuy, neutral: maNeutral, sell: maSell, verdict: maVerdict },
+    oscillatorRating: { buy: oscBuy, neutral: oscNeutral, sell: oscSell, verdict: oscVerdict },
+    signals,
+  };
+}
+
+/**
  * Evaluates the Technical Summary deterministically
  */
 export function evaluateTechnicalSummary(
@@ -576,6 +816,21 @@ export function evaluateTechnicalSummary(
     price
   );
 
+  const consensus = computeTechnicalConsensus(
+    price,
+    quote,
+    Math.round(latestEMA20),
+    Math.round(latestEMA50),
+    Math.round(latestEMA200),
+    rsi14,
+    macd,
+    stochastic,
+    bollinger,
+    mfi14,
+    detectedPattern,
+    Number(volumeRatio20.toFixed(2))
+  );
+
   const summary: TechnicalSummary = {
     quote: {
       ...quote,
@@ -600,6 +855,7 @@ export function evaluateTechnicalSummary(
     support2,
     resistance1,
     resistance2,
+    consensus,
   };
 
   return {

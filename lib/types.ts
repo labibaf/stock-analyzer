@@ -75,6 +75,27 @@ export interface CandlePattern {
   reliability: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
+export type SignalVerdict = 'BUY' | 'SELL' | 'NEUTRAL';
+
+export interface SingleIndicatorSignal {
+  name: string;
+  category: 'MA' | 'OSCILLATOR' | 'VOLATILITY';
+  value: string;
+  signal: SignalVerdict;
+  reason: string;
+}
+
+export interface TechnicalConsensus {
+  totalBuy: number;
+  totalNeutral: number;
+  totalSell: number;
+  totalIndicators: number;
+  overallRating: 'STRONG_BUY' | 'BUY' | 'NEUTRAL' | 'SELL' | 'STRONG_SELL';
+  maRating: { buy: number; neutral: number; sell: number; verdict: SignalVerdict };
+  oscillatorRating: { buy: number; neutral: number; sell: number; verdict: SignalVerdict };
+  signals: SingleIndicatorSignal[];
+}
+
 export interface TechnicalSummary {
   quote: StockQuote;
   ema20: number;
@@ -96,6 +117,7 @@ export interface TechnicalSummary {
   support2: number;
   resistance1: number;
   resistance2: number;
+  consensus: TechnicalConsensus;
 }
 
 export type RecommendationType =

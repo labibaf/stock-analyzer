@@ -47,9 +47,26 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
               <span className="text-xs px-2 py-0.5 rounded bg-[#131b2e] text-sky-400 font-mono font-semibold border border-[#1f2d4d]">
                 IDX / BEI
               </span>
+              {tech.consensus && (
+                <span
+                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
+                    tech.consensus.overallRating.includes('BUY')
+                      ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300'
+                      : tech.consensus.overallRating.includes('SELL')
+                      ? 'bg-rose-950/60 border-rose-800 text-rose-300'
+                      : 'bg-amber-950/60 border-amber-800 text-amber-300'
+                  }`}
+                  title={`${tech.consensus.totalBuy} Buy, ${tech.consensus.totalNeutral} Neutral, ${tech.consensus.totalSell} Sell`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  <span>
+                    {tech.consensus.overallRating.replace('_', ' ')} ({tech.consensus.totalBuy}B / {tech.consensus.totalSell}S)
+                  </span>
+                </span>
+              )}
               {tech.detectedPattern && (
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded font-medium border flex items-center gap-1 ${
+                  className={`text-[10px] px-2 py-0.5 rounded font-medium border flex items-center gap-1 ${
                     tech.detectedPattern.type === 'BULLISH'
                       ? 'bg-emerald-950/50 border-emerald-800 text-emerald-300'
                       : tech.detectedPattern.type === 'BEARISH'
