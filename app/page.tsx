@@ -139,7 +139,7 @@ export default function HomePage() {
       />
 
       {/* Main Content Area (Full Width Fluid) */}
-      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 space-y-4 max-w-[1920px] mx-auto">
+      <main className="flex-1 w-full px-3 sm:px-6 lg:px-8 py-3 sm:py-4 space-y-4 max-w-[1920px] mx-auto">
         {/* Error Notification */}
         {error && (
           <div className="p-3 rounded-md bg-rose-950/30 border border-rose-800/50 flex items-center justify-between gap-3 text-rose-300 text-xs">

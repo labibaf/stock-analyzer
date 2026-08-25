@@ -146,7 +146,7 @@ export default function TradingViewChart({
 
     const chart = createChart(container, {
       width: container.clientWidth,
-      height: 480,
+      height: container.clientWidth < 640 ? 360 : 480,
       layout: {
         background: { type: ColorType.Solid, color: '#090d16' },
         textColor: '#94a3b8',
@@ -347,6 +347,7 @@ export default function TradingViewChart({
       if (chartContainerRef.current && chartInstanceRef.current) {
         chartInstanceRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
+          height: chartContainerRef.current.clientWidth < 640 ? 360 : 480,
         });
       }
     };

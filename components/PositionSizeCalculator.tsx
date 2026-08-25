@@ -380,7 +380,7 @@ export default function PositionSizeCalculator({
           )}
 
           {/* Toggle for Customizing Entry / SL prices & Broker Fee */}
-          <div className="flex items-center justify-between text-xs px-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs px-1">
             <button
               onClick={() => setShowPriceSettings(!showPriceSettings)}
               className="text-slate-400 hover:text-sky-300 flex items-center gap-1.5 transition-colors font-medium text-xs"

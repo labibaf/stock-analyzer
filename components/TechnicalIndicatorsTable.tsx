@@ -126,7 +126,12 @@ export default function TechnicalIndicatorsTable({ tech }: TechnicalIndicatorsTa
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>Sinyal Buy / Sell ({consensus.totalBuy}B - {consensus.totalNeutral}N - {consensus.totalSell}S)</span>
+            <span className="hidden sm:inline">
+              Sinyal Buy / Sell ({consensus.totalBuy}B - {consensus.totalNeutral}N - {consensus.totalSell}S)
+            </span>
+            <span className="sm:hidden">
+              Sinyal ({consensus.totalBuy}B/{consensus.totalSell}S)
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('RAW')}
