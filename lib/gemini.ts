@@ -109,7 +109,7 @@ Berikan analisis swing trading terstruktur dalam format JSON dengan schema persi
     "riskRewardRatio": "1:2.4",
     "potentialProfitPct": 6.2,
     "potentialRiskPct": 2.6,
-    "estimatedHoldingPeriod": "5 - 10 hari bursa"
+    "estimatedHoldingPeriod": "Estimasi durasi holding dinamis dan realistis (misal: '3 - 5 hari bursa', '5 - 12 hari bursa', '8 - 15 hari bursa', atau '10 - 20 hari bursa') berbasis jarak target TP terhadap rata-rata ATR harian"
   },
   "keyCatalystsAndRisks": [
     "Poin penting support/resistance atau momentum 1",

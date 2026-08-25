@@ -189,10 +189,10 @@ export default function PositionSizeCalculator({
                 </span>
                 <input
                   type="number"
-                  value={portfolioCapital}
+                  value={portfolioCapital || ''}
                   onChange={(e) => setPortfolioCapital(Math.max(Number(e.target.value) || 0, 0))}
-                  step={1_000_000}
-                  className="w-full bg-[#101420] border border-[#1e273d] focus:border-sky-500 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-white font-bold outline-none tabular-nums"
+                  placeholder="Masukkan total modal (contoh: 10000000)"
+                  className="w-full bg-[#101420] border border-[#1e273d] focus:border-sky-500 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-white font-bold outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none transition-colors"
                 />
               </div>
             </div>
@@ -223,72 +223,45 @@ export default function PositionSizeCalculator({
             <div className="p-3.5 rounded-lg bg-[#070a12] border border-[#131b2e]">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Percent className="w-3.5 h-3.5 text-rose-400" /> Toleransi Risiko Per Trade
+                  <Percent className="w-3.5 h-3.5 text-rose-400" /> Toleransi Risiko Per Trade (0.1% - 20%)
                 </label>
-                <div className="flex items-center gap-1 font-mono text-xs">
+                <div className="flex items-center gap-1.5 font-mono text-xs">
                   <span className="text-slate-400 text-[11px]">Max Loss:</span>
                   <span className="font-bold text-rose-400 tabular-nums">
-                    {formatIDR(maxRiskRupiah)} ({riskPercent}%)
+                    {formatIDR(maxRiskRupiah)} ({riskPercent.toFixed(1)}%)
                   </span>
                 </div>
               </div>
 
-              {/* Slider with preset buttons */}
+              {/* Smooth Slider (0.1% - 20%, step 0.1%) */}
               <div className="space-y-2 mt-1">
                 <input
                   type="range"
-                  min={0.5}
-                  max={5}
-                  step={0.5}
+                  min={0.1}
+                  max={20}
+                  step={0.1}
                   value={riskPercent}
                   onChange={(e) => setRiskPercent(Number(e.target.value))}
-                  className="w-full accent-rose-500 cursor-pointer h-2 bg-[#121929] rounded-lg"
+                  className="w-full accent-rose-500 cursor-pointer h-2 bg-[#121929] rounded-lg transition-all"
                 />
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <button
-                    type="button"
-                    onClick={() => setRiskPercent(1)}
-                    className={`px-2 py-1 rounded-md border ${
-                      riskPercent === 1
-                        ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300 font-bold'
-                        : 'bg-[#101420] border-[#1a2236] text-slate-400'
-                    }`}
-                  >
-                    1% Konservatif
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRiskPercent(2)}
-                    className={`px-2 py-1 rounded-md border ${
-                      riskPercent === 2
-                        ? 'bg-sky-950/60 border-sky-800 text-sky-300 font-bold'
-                        : 'bg-[#101420] border-[#1a2236] text-slate-400'
-                    }`}
-                  >
-                    2% Standar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRiskPercent(3)}
-                    className={`px-2 py-1 rounded-md border ${
-                      riskPercent === 3
-                        ? 'bg-amber-950/60 border-amber-800 text-amber-300 font-bold'
-                        : 'bg-[#101420] border-[#1a2236] text-slate-400'
-                    }`}
-                  >
-                    3% Moderat
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRiskPercent(5)}
-                    className={`px-2 py-1 rounded-md border ${
-                      riskPercent === 5
-                        ? 'bg-rose-950/60 border-rose-800 text-rose-300 font-bold'
-                        : 'bg-[#101420] border-[#1a2236] text-slate-400'
-                    }`}
-                  >
-                    5% Agresif
-                  </button>
+
+                {/* Preset Risk Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs font-mono pt-1">
+                  <span className="text-[10px] text-slate-500 font-sans font-medium mr-0.5">Preset:</span>
+                  {[1, 2, 3, 5, 10, 15, 20].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRiskPercent(r)}
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors border whitespace-nowrap ${
+                        riskPercent === r
+                          ? 'bg-rose-500/20 border-rose-400 text-rose-300 font-bold'
+                          : 'bg-[#101420] hover:bg-[#151b2c] border-[#1a2236] text-slate-400'
+                      }`}
+                    >
+                      {r}%
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -331,7 +304,7 @@ export default function PositionSizeCalculator({
                   min={1}
                   value={manualLots}
                   onChange={(e) => setManualLots(Math.max(Number(e.target.value) || 1, 1))}
-                  className="flex-1 text-center bg-[#101420] border border-[#1e273d] rounded-md py-1.5 font-mono text-base font-black text-white outline-none tabular-nums"
+                  className="flex-1 text-center bg-[#101420] border border-[#1e273d] rounded-md py-1.5 font-mono text-base font-black text-white outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <button
                   type="button"
@@ -406,7 +379,7 @@ export default function PositionSizeCalculator({
                     type="number"
                     value={customEntry}
                     onChange={(e) => setCustomEntry(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-[#1e273d] rounded-md px-2.5 py-1.5 font-mono text-white text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-[#1e273d] rounded-md px-2.5 py-1.5 font-mono text-white text-xs tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div>
@@ -415,7 +388,7 @@ export default function PositionSizeCalculator({
                     type="number"
                     value={customSL}
                     onChange={(e) => setCustomSL(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-rose-900/60 rounded-md px-2.5 py-1.5 font-mono text-rose-300 text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-rose-900/60 rounded-md px-2.5 py-1.5 font-mono text-rose-300 text-xs tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div>
@@ -424,7 +397,7 @@ export default function PositionSizeCalculator({
                     type="number"
                     value={customTP1}
                     onChange={(e) => setCustomTP1(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-emerald-900/60 rounded-md px-2.5 py-1.5 font-mono text-emerald-300 text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-emerald-900/60 rounded-md px-2.5 py-1.5 font-mono text-emerald-300 text-xs tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div>
@@ -433,7 +406,7 @@ export default function PositionSizeCalculator({
                     type="number"
                     value={customTP2}
                     onChange={(e) => setCustomTP2(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-emerald-900/60 rounded-md px-2.5 py-1.5 font-mono text-emerald-300 text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-emerald-900/60 rounded-md px-2.5 py-1.5 font-mono text-emerald-300 text-xs tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>

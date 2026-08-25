@@ -733,6 +733,25 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
   const potentialProfitPct = Number((((targetPrice1 - entryPrice) / entryPrice) * 100).toFixed(1));
   const potentialRiskPct = Number((((entryPrice - stopLoss) / entryPrice) * 100).toFixed(1));
 
+  // Compute dynamic estimated holding period based on ATR distance to target
+  let estimatedHoldingPeriod = '5 - 10 hari bursa';
+  if (atr > 0) {
+    const atrMovementDays = Math.max(Math.ceil((targetPrice1 - entryPrice) / (atr * 0.8)), 2);
+    const maxDays = Math.max(Math.ceil((targetPrice2 - entryPrice) / (atr * 0.7)), atrMovementDays + 2);
+
+    if (recommendation === 'BUY_ON_BREAKOUT') {
+      estimatedHoldingPeriod = `${Math.min(atrMovementDays, 3)} - ${Math.max(atrMovementDays + 3, 7)} hari bursa (Fast Momentum)`;
+    } else if (setupTitle.includes('Oversold')) {
+      estimatedHoldingPeriod = `${Math.min(atrMovementDays, 2)} - ${Math.max(atrMovementDays + 2, 5)} hari bursa (Quick Rebound)`;
+    } else if (tech.bollinger.isSqueeze || tech.trend === 'CONSOLIDATION') {
+      estimatedHoldingPeriod = `${Math.max(atrMovementDays, 7)} - ${Math.max(maxDays, 15)} hari bursa (Base Breakout)`;
+    } else if (recommendation === 'AVOID') {
+      estimatedHoldingPeriod = 'N/A (Hindari Entry)';
+    } else {
+      estimatedHoldingPeriod = `${atrMovementDays} - ${maxDays} hari bursa`;
+    }
+  }
+
   const actionPlan: SwingActionPlan = {
     buyZone: `${buyZoneLow} - ${buyZoneHigh}`,
     entryPrice,
@@ -742,7 +761,7 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
     riskRewardRatio,
     potentialProfitPct,
     potentialRiskPct,
-    estimatedHoldingPeriod: '5 - 10 hari bursa',
+    estimatedHoldingPeriod,
   };
 
   const keyCatalystsAndRisks: string[] = [
