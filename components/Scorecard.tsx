@@ -4,14 +4,13 @@ import React from 'react';
 import { StockQuote, TechnicalSummary } from '@/lib/types';
 import { formatIDR, formatVolume } from '@/lib/idx-rules';
 import {
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  Flame,
-  Gauge,
   ArrowUpRight,
   ArrowDownRight,
+  Flame,
+  Activity,
+  Gauge,
   Zap,
+  Shield,
 } from 'lucide-react';
 
 interface ScorecardProps {
@@ -29,29 +28,33 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
       ? Math.min(Math.max(((quote.currentPrice - quote.fiftyTwoWeekLow) / range52) * 100, 0), 100)
       : 50;
 
+  // Calculate distance % from current price to support/resistance
+  const getDistancePct = (level: number) => {
+    const diff = ((level - quote.currentPrice) / quote.currentPrice) * 100;
+    return diff > 0 ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`;
+  };
+
   return (
-    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4 flex flex-col justify-between h-full">
-      {/* Top Section: Ticker Info & Price */}
+    <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 flex flex-col justify-between h-full shadow-lg">
+      {/* Top Section: Ticker Info & Big Price Header */}
       <div>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-white">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-white">
                 {quote.ticker}
               </span>
-              <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#161c2c] text-slate-400 font-mono border border-[#232d46]">
-                IDX
+              <span className="text-xs px-2 py-0.5 rounded bg-[#131b2e] text-sky-400 font-mono font-semibold border border-[#1f2d4d]">
+                IDX / BEI
               </span>
-
-              {/* Candlestick Pattern Badge */}
               {tech.detectedPattern && (
                 <span
                   className={`text-[11px] px-2 py-0.5 rounded font-medium border flex items-center gap-1 ${
                     tech.detectedPattern.type === 'BULLISH'
-                      ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-400'
+                      ? 'bg-emerald-950/50 border-emerald-800 text-emerald-300'
                       : tech.detectedPattern.type === 'BEARISH'
-                      ? 'bg-rose-950/40 border-rose-800/60 text-rose-400'
-                      : 'bg-[#161c2c] border-[#232d46] text-slate-300'
+                      ? 'bg-rose-950/50 border-rose-800 text-rose-300'
+                      : 'bg-[#131b2e] border-[#1f2d4d] text-slate-300'
                   }`}
                   title={tech.detectedPattern.description}
                 >
@@ -59,32 +62,24 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
                   <span>{tech.detectedPattern.name}</span>
                 </span>
               )}
-
-              {/* Bollinger Squeeze Alert Badge */}
-              {tech.bollinger.isSqueeze && (
-                <span className="text-[11px] px-2 py-0.5 rounded bg-amber-950/40 border border-amber-800/60 text-amber-300 font-medium flex items-center gap-1">
-                  <Flame className="w-3 h-3 text-amber-400" />
-                  <span>BB Squeeze</span>
-                </span>
-              )}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">{quote.name}</p>
+            <p className="text-xs text-slate-400 mt-1 line-clamp-1 font-medium">{quote.name}</p>
           </div>
 
-          {/* Current Price & Change */}
+          {/* Current Price & Day Change */}
           <div className="text-right">
-            <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
+            <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-white tabular-nums">
               {formatIDR(quote.currentPrice)}
             </div>
             <div
-              className={`flex items-center justify-end gap-1 text-xs font-semibold mt-0.5 tabular-nums ${
+              className={`flex items-center justify-end gap-1 text-xs sm:text-sm font-bold mt-0.5 tabular-nums ${
                 isPositive ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
               {isPositive ? (
-                <ArrowUpRight className="w-3.5 h-3.5" />
+                <ArrowUpRight className="w-4 h-4" />
               ) : (
-                <ArrowDownRight className="w-3.5 h-3.5" />
+                <ArrowDownRight className="w-4 h-4" />
               )}
               <span>
                 {quote.change > 0 ? `+${quote.change}` : quote.change} (
@@ -94,145 +89,194 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
           </div>
         </div>
 
-        {/* 52-Week Range Bar */}
-        <div className="mt-3 pt-2.5 border-t border-[#182032]">
-          <div className="flex justify-between text-[11px] text-slate-400 mb-1 font-mono">
-            <span>52W L: {formatIDR(quote.fiftyTwoWeekLow)}</span>
-            <span className="text-slate-500">Rentang 52W: {pos52.toFixed(0)}%</span>
-            <span>52W H: {formatIDR(quote.fiftyTwoWeekHigh)}</span>
+        {/* 52-Week Range Bar (Figma styled gradient bar) */}
+        <div className="mt-3.5 pt-3 border-t border-[#141d30]">
+          <div className="flex justify-between text-[11px] font-mono text-slate-400 mb-1.5">
+            <span>52W L: <strong className="text-slate-200">{formatIDR(quote.fiftyTwoWeekLow)}</strong></span>
+            <span className="text-slate-500 font-medium">Rentang 52W: {pos52.toFixed(0)}%</span>
+            <span>52W H: <strong className="text-slate-200">{formatIDR(quote.fiftyTwoWeekHigh)}</strong></span>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-[#161c2c] overflow-hidden">
+          <div className="w-full h-2 rounded-full bg-[#121929] overflow-hidden relative border border-[#1a253d]">
             <div
-              className="h-full bg-sky-500 rounded-full transition-all duration-300"
+              className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 rounded-full transition-all duration-500"
               style={{ width: `${pos52}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* Grid of Key Technical Indicators */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
-        {/* Trend Box */}
-        <div className="p-2.5 rounded-md bg-[#090c14] border border-[#192134]">
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-0.5">
-            <Activity className="w-3 h-3 text-sky-400" />
-            <span>Tren</span>
+      {/* Technical Matrix Table Rows (Figma layout) */}
+      <div className="mt-3.5 space-y-1.5 text-xs">
+        {/* Row 1: Trend Structure */}
+        <div className="flex items-center justify-between p-2 rounded-lg bg-[#070a12] border border-[#131b2e]">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Activity className="w-3.5 h-3.5 text-sky-400" />
+            <span className="font-medium">Struktur Tren:</span>
           </div>
-          <div className="text-xs font-semibold text-slate-100 flex items-center gap-1">
-            {tech.trend === 'STRONG_UPTREND' && (
-              <span className="text-emerald-400 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> Strong Uptrend
-              </span>
-            )}
-            {tech.trend === 'PULLBACK_UPTREND' && (
-              <span className="text-cyan-400 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> Pullback Buy
-              </span>
-            )}
-            {tech.trend === 'CONSOLIDATION' && (
-              <span className="text-amber-400">Sideways</span>
-            )}
-            {tech.trend === 'DOWNTREND' && (
-              <span className="text-rose-400 flex items-center gap-1">
-                <TrendingDown className="w-3 h-3" /> Downtrend
-              </span>
-            )}
-          </div>
-          <div className="text-[10px] text-slate-500 mt-1 font-mono">
-            EMA20: {tech.ema20} | 50: {tech.ema50}
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-slate-300 text-[11px]">
+              EMA {tech.ema20} / {tech.ema50}
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                tech.trend === 'STRONG_UPTREND'
+                  ? 'bg-emerald-950/60 border-emerald-800 text-emerald-400'
+                  : tech.trend === 'PULLBACK_UPTREND'
+                  ? 'bg-cyan-950/60 border-cyan-800 text-cyan-400'
+                  : tech.trend === 'CONSOLIDATION'
+                  ? 'bg-amber-950/60 border-amber-800 text-amber-400'
+                  : 'bg-rose-950/60 border-rose-800 text-rose-400'
+              }`}
+            >
+              {tech.trend === 'STRONG_UPTREND' && 'Strong Uptrend'}
+              {tech.trend === 'PULLBACK_UPTREND' && 'Pullback Buy'}
+              {tech.trend === 'CONSOLIDATION' && 'Sideways'}
+              {tech.trend === 'DOWNTREND' && 'Downtrend'}
+            </span>
           </div>
         </div>
 
-        {/* RSI & MFI */}
-        <div className="p-2.5 rounded-md bg-[#090c14] border border-[#192134]">
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-0.5">
-            <Gauge className="w-3 h-3 text-purple-400" />
-            <span>RSI & MFI</span>
+        {/* Row 2: RSI 14 & MFI */}
+        <div className="flex items-center justify-between p-2 rounded-lg bg-[#070a12] border border-[#131b2e]">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Gauge className="w-3.5 h-3.5 text-purple-400" />
+            <span className="font-medium">RSI (14) & Flow:</span>
           </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-sm font-bold font-mono text-white tabular-nums">{tech.rsi14}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-slate-200 font-bold tabular-nums">
+              RSI {tech.rsi14} | MFI {tech.mfi14.value}
+            </span>
             <span
-              className={`text-[10px] font-semibold ${
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
                 tech.rsiStatus === 'OVERSOLD'
-                  ? 'text-emerald-400'
-                  : tech.rsiStatus === 'OVERBOUGHT'
-                  ? 'text-rose-400'
+                  ? 'bg-emerald-950/60 border-emerald-800 text-emerald-400'
                   : tech.rsiStatus === 'HEALTHY_BULLISH'
-                  ? 'text-sky-400'
-                  : 'text-slate-400'
+                  ? 'bg-sky-950/60 border-sky-800 text-sky-400'
+                  : tech.rsiStatus === 'OVERBOUGHT'
+                  ? 'bg-rose-950/60 border-rose-800 text-rose-400'
+                  : 'bg-[#131b2e] border-[#1f2d4d] text-slate-300'
               }`}
             >
-              {tech.rsiStatus === 'OVERSOLD' && 'Oversold'}
-              {tech.rsiStatus === 'HEALTHY_BULLISH' && 'Bullish'}
-              {tech.rsiStatus === 'OVERBOUGHT' && 'Overbought'}
+              {tech.rsiStatus === 'OVERSOLD' && 'Oversold (<32)'}
+              {tech.rsiStatus === 'HEALTHY_BULLISH' && 'Bullish (42-60)'}
+              {tech.rsiStatus === 'OVERBOUGHT' && 'Overbought (>70)'}
               {tech.rsiStatus === 'NEUTRAL' && 'Neutral'}
             </span>
           </div>
-          <div className="text-[10px] text-slate-500 mt-1 font-mono">
-            MFI: <span className="text-slate-300 font-semibold">{tech.mfi14.value}</span>
-          </div>
         </div>
 
-        {/* Stochastic (14, 3, 3) */}
-        <div className="p-2.5 rounded-md bg-[#090c14] border border-[#192134]">
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-0.5">
-            <Zap className="w-3 h-3 text-cyan-400" />
-            <span>Stochastic</span>
+        {/* Row 3: Stochastic (14,3,3) & Bandwidth */}
+        <div className="flex items-center justify-between p-2 rounded-lg bg-[#070a12] border border-[#131b2e]">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="font-medium">Stochastic (14,3,3):</span>
           </div>
-          <div className="flex items-baseline gap-1 font-mono text-xs">
-            <span className="font-bold text-white tabular-nums">{tech.stochastic.k}</span>
-            <span className="text-slate-600">/</span>
-            <span className="text-slate-400 tabular-nums">{tech.stochastic.d}</span>
-            {tech.stochastic.crossStatus === 'BULLISH_CROSS' && (
-              <span className="text-[9px] bg-emerald-950/60 border border-emerald-800 text-emerald-400 px-1 rounded ml-auto">
-                Cross
-              </span>
-            )}
-          </div>
-          <div className="text-[10px] text-slate-500 mt-1 font-mono">
-            BW: <span className="text-slate-300">{tech.bollinger.bandwidth}%</span>
-          </div>
-        </div>
-
-        {/* Volume & Surge */}
-        <div className="p-2.5 rounded-md bg-[#090c14] border border-[#192134]">
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-0.5">
-            <Flame className="w-3 h-3 text-amber-400" />
-            <span>Volume vs 20MA</span>
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-sm font-bold font-mono text-white tabular-nums">
-              {tech.volumeRatio20}x
+          <div className="flex items-center gap-2 font-mono">
+            <span className="text-slate-200 font-semibold text-[11px] tabular-nums">
+              %K {tech.stochastic.k} / %D {tech.stochastic.d}
             </span>
-            {tech.volumeSurge && (
-              <span className="text-[9px] uppercase px-1 py-0.2 rounded bg-amber-950/60 text-amber-300 font-bold border border-amber-800">
-                Surge
+            <span
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                tech.stochastic.crossStatus === 'BULLISH_CROSS'
+                  ? 'bg-emerald-950/60 border-emerald-800 text-emerald-400'
+                  : tech.stochastic.status === 'OVERSOLD'
+                  ? 'bg-emerald-950/60 border-emerald-800 text-emerald-400'
+                  : tech.stochastic.status === 'OVERBOUGHT'
+                  ? 'bg-rose-950/60 border-rose-800 text-rose-400'
+                  : 'bg-[#131b2e] border-[#1f2d4d] text-slate-300'
+              }`}
+            >
+              {tech.stochastic.crossStatus === 'BULLISH_CROSS'
+                ? 'Bullish Cross'
+                : tech.stochastic.status}
+            </span>
+          </div>
+        </div>
+
+        {/* Row 4: Volume & Volatilitas (ATR) */}
+        <div className="flex items-center justify-between p-2 rounded-lg bg-[#070a12] border border-[#131b2e]">
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            <span className="font-medium">Volume vs 20MA:</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-slate-200 font-bold tabular-nums">
+              {tech.volumeRatio20}x ({formatVolume(quote.volume)})
+            </span>
+            {tech.bollinger.isSqueeze ? (
+              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-950/60 border border-amber-800 text-amber-300 flex items-center gap-1">
+                🔥 BB Squeeze
+              </span>
+            ) : tech.volumeSurge ? (
+              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-950/60 border border-amber-800 text-amber-300">
+                Surge Spike
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#131b2e] border border-[#1f2d4d] text-slate-400">
+                Normal
               </span>
             )}
-          </div>
-          <div className="text-[10px] text-slate-500 mt-1 font-mono truncate">
-            Vol: {formatVolume(quote.volume)}
           </div>
         </div>
       </div>
 
-      {/* Key Support & Resistance Levels Footer */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-2.5 pt-2.5 border-t border-[#182032] text-xs">
-        <div className="flex items-center justify-between p-1.5 rounded bg-[#0b0e17] border border-[#171e30]">
-          <span className="text-slate-400 text-[11px]">S1</span>
-          <span className="font-mono font-semibold text-emerald-400 tabular-nums">{formatIDR(tech.support1)}</span>
+      {/* Support & Resistance Price Level Table (Figma 4-row List) */}
+      <div className="mt-3.5 pt-3 border-t border-[#141d30]">
+        <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5 font-medium">
+          <span className="flex items-center gap-1">
+            <Shield className="w-3 h-3 text-sky-400" /> Level Kunci Support & Resistance
+          </span>
+          <span className="font-mono text-slate-500">Jarak dari harga</span>
         </div>
-        <div className="flex items-center justify-between p-1.5 rounded bg-[#0b0e17] border border-[#171e30]">
-          <span className="text-slate-400 text-[11px]">S2</span>
-          <span className="font-mono text-emerald-300/80 tabular-nums">{formatIDR(tech.support2)}</span>
-        </div>
-        <div className="flex items-center justify-between p-1.5 rounded bg-[#0b0e17] border border-[#171e30]">
-          <span className="text-slate-400 text-[11px]">R1</span>
-          <span className="font-mono font-semibold text-rose-400 tabular-nums">{formatIDR(tech.resistance1)}</span>
-        </div>
-        <div className="flex items-center justify-between p-1.5 rounded bg-[#0b0e17] border border-[#171e30]">
-          <span className="text-slate-400 text-[11px]">R2</span>
-          <span className="font-mono text-rose-300/80 tabular-nums">{formatIDR(tech.resistance2)}</span>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {/* Support 1 */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-950/20 border border-emerald-900/40">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-slate-300 font-medium text-[11px]">Support 1 (S1)</span>
+            </div>
+            <div className="text-right font-mono">
+              <span className="font-bold text-emerald-400 block tabular-nums">{formatIDR(tech.support1)}</span>
+              <span className="text-[10px] text-emerald-500/80">{getDistancePct(tech.support1)}</span>
+            </div>
+          </div>
+
+          {/* Resistance 1 */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-900/40">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500" />
+              <span className="text-slate-300 font-medium text-[11px]">Resistance 1 (R1)</span>
+            </div>
+            <div className="text-right font-mono">
+              <span className="font-bold text-rose-400 block tabular-nums">{formatIDR(tech.resistance1)}</span>
+              <span className="text-[10px] text-rose-500/80">{getDistancePct(tech.resistance1)}</span>
+            </div>
+          </div>
+
+          {/* Support 2 */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-950/10 border border-emerald-900/20">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+              <span className="text-slate-400 text-[11px]">Support 2 (S2)</span>
+            </div>
+            <div className="text-right font-mono">
+              <span className="font-semibold text-emerald-400/90 block tabular-nums">{formatIDR(tech.support2)}</span>
+              <span className="text-[10px] text-emerald-500/70">{getDistancePct(tech.support2)}</span>
+            </div>
+          </div>
+
+          {/* Resistance 2 */}
+          <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/10 border border-rose-900/20">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+              <span className="text-slate-400 text-[11px]">Resistance 2 (R2)</span>
+            </div>
+            <div className="text-right font-mono">
+              <span className="font-semibold text-rose-400/90 block tabular-nums">{formatIDR(tech.resistance2)}</span>
+              <span className="text-[10px] text-rose-500/70">{getDistancePct(tech.resistance2)}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

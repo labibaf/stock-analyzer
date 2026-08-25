@@ -11,13 +11,20 @@ interface TechnicalIndicatorsTableProps {
 
 export default function TechnicalIndicatorsTable({ tech }: TechnicalIndicatorsTableProps) {
   return (
-    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4">
-      <div className="flex items-center justify-between pb-2.5 border-b border-[#182032]">
+    <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 shadow-lg">
+      <div className="flex items-center justify-between pb-3 border-b border-[#141d30]">
         <div className="flex items-center gap-2">
-          <Sliders className="w-3.5 h-3.5 text-sky-400" />
-          <h4 className="text-xs font-semibold text-white">Parameter & Indikator Lengkap</h4>
+          <div className="w-7 h-7 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
+            <Sliders className="w-3.5 h-3.5 text-sky-400" />
+          </div>
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-white">Parameter & Indikator Lengkap</h4>
+            <p className="text-[10px] text-slate-400">Deterministic Mathematical Formula</p>
+          </div>
         </div>
-        <span className="text-[10px] text-slate-500 font-mono">Deterministic Math</span>
+        <span className="text-[10px] text-sky-400 font-mono font-semibold px-2 py-0.5 rounded bg-[#131b2e] border border-[#1f2d4d]">
+          100% Calculated
+        </span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-3 text-xs">

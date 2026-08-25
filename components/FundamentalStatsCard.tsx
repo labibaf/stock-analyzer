@@ -30,21 +30,21 @@ export default function FundamentalStatsCard({ quote }: FundamentalStatsCardProp
   };
 
   return (
-    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4 flex flex-col justify-between h-full">
+    <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 flex flex-col justify-between h-full shadow-lg">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between pb-2.5 border-b border-[#182032]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#141d30]">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#161c2c] border border-[#232d46] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
               <Landmark className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-white">Valuasi & Fundamental</h4>
-              <p className="text-[10px] text-slate-400">Metrik finansial resmi</p>
+              <h4 className="text-xs sm:text-sm font-bold text-white">Valuasi & Fundamental</h4>
+              <p className="text-[10px] text-slate-400">Metrik finansial resmi emiten</p>
             </div>
           </div>
 
-          <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-[#161c2c] text-slate-300 border border-[#232d46]">
+          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#131b2e] text-slate-300 border border-[#1f2d4d]">
             {getMarketCapTier(quote.marketCap)}
           </span>
         </div>

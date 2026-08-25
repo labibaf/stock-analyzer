@@ -329,13 +329,15 @@ export default function TradingViewChart({
   };
 
   return (
-    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4">
+    <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 shadow-lg">
       {/* Chart Top Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 pb-2.5 border-b border-[#182032]">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 pb-3 border-b border-[#141d30]">
         <div className="flex items-center gap-2">
-          <Layers className="w-3.5 h-3.5 text-sky-400" />
-          <span className="text-xs font-semibold text-slate-200">
-            Daily Candlestick ({ticker}.JK)
+          <div className="w-7 h-7 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
+            <Layers className="w-3.5 h-3.5 text-sky-400" />
+          </div>
+          <span className="text-xs sm:text-sm font-bold text-slate-200">
+            Interactive Daily Candlestick ({ticker}.JK)
           </span>
           {isSqueeze && (
             <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800 flex items-center gap-1">

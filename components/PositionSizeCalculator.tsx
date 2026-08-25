@@ -12,6 +12,7 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  Target,
 } from 'lucide-react';
 
 interface PositionSizeCalculatorProps {
@@ -116,37 +117,37 @@ export default function PositionSizeCalculator({
   };
 
   return (
-    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4">
-      {/* Header & Mode Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#182032]">
+    <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 shadow-lg">
+      {/* Header & Mode Switcher (Figma styled) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-[#141d30]">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-[#161c2c] border border-[#232d46] flex items-center justify-center">
-            <Calculator className="w-3.5 h-3.5 text-sky-400" />
+          <div className="w-8 h-8 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
+            <Calculator className="w-4 h-4 text-sky-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-sm font-semibold text-white">
+              <h4 className="text-sm sm:text-base font-bold text-white tracking-tight">
                 Simulasi Eksekusi & Manajemen Lot ({ticker}.JK)
               </h4>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#161c2c] text-slate-400 border border-[#232d46]">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#131b2e] text-sky-300 border border-[#1f2d4d] font-semibold">
                 1 Lot = 100 Lembar
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Position Sizing berbasis toleransi Stop Loss</p>
+            <p className="text-[11px] text-slate-400">Position Sizing presisi berbasis toleransi Stop Loss</p>
           </div>
         </div>
 
         {/* Tab Switcher: Risk-based vs Lot-based */}
-        <div className="flex items-center bg-[#090c14] p-0.5 rounded-md border border-[#192134] text-xs self-start sm:self-auto">
+        <div className="flex items-center bg-[#070a12] p-1 rounded-lg border border-[#131b2e] text-xs self-start sm:self-auto">
           <button
             onClick={() => setCalcMode('RISK_BASED')}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
               calcMode === 'RISK_BASED'
-                ? 'bg-sky-600 text-white font-semibold'
+                ? 'bg-sky-600 text-white shadow'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <ShieldAlert className="w-3 h-3" />
+            <ShieldAlert className="w-3.5 h-3.5" />
             <span>Otomatis (Berdasar Risiko)</span>
           </button>
           <button
@@ -154,36 +155,36 @@ export default function PositionSizeCalculator({
               setCalcMode('LOT_BASED');
               setManualLots(activeLots);
             }}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
               calcMode === 'LOT_BASED'
-                ? 'bg-sky-600 text-white font-semibold'
+                ? 'bg-sky-600 text-white shadow'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Layers className="w-3 h-3" />
+            <Layers className="w-3.5 h-3.5" />
             <span>Manual (Input Lot)</span>
           </button>
         </div>
       </div>
 
       {/* Main Interactive Controls Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3.5">
         {/* Left Section: Inputs & Parameters (7 Cols) */}
         <div className="lg:col-span-7 space-y-3">
           {/* Portfolio Capital Card */}
-          <div className="p-3 rounded-md bg-[#090c14] border border-[#192134]">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+          <div className="p-3.5 rounded-lg bg-[#070a12] border border-[#131b2e]">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Modal Portofolio Trading
               </label>
-              <span className="font-mono text-xs font-bold text-emerald-400 tabular-nums">
+              <span className="font-mono text-sm font-black text-emerald-400 tabular-nums">
                 {formatIDR(portfolioCapital)}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-500 font-medium">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-500 font-bold">
                   Rp
                 </span>
                 <input
@@ -191,23 +192,23 @@ export default function PositionSizeCalculator({
                   value={portfolioCapital}
                   onChange={(e) => setPortfolioCapital(Math.max(Number(e.target.value) || 0, 0))}
                   step={1_000_000}
-                  className="w-full bg-[#101420] border border-[#1e273d] focus:border-sky-500 rounded pl-8 pr-2.5 py-1.5 text-xs font-mono text-white outline-none tabular-nums"
+                  className="w-full bg-[#101420] border border-[#1e273d] focus:border-sky-500 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-white font-bold outline-none tabular-nums"
                 />
               </div>
             </div>
 
             {/* Quick Preset Buttons */}
-            <div className="flex items-center gap-1 overflow-x-auto mt-2 pt-1.5 border-t border-[#131826] no-scrollbar">
-              <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap mr-1">
-                Preset:
+            <div className="flex items-center gap-1.5 overflow-x-auto mt-2.5 pt-2 border-t border-[#121828] no-scrollbar">
+              <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap mr-1">
+                Preset Modal:
               </span>
               {presetCapitals.map((p) => (
                 <button
                   key={p.value}
                   onClick={() => setPortfolioCapital(p.value)}
-                  className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors border whitespace-nowrap ${
                     portfolioCapital === p.value
-                      ? 'bg-sky-500/20 border-sky-500/50 text-sky-300 font-semibold'
+                      ? 'bg-sky-500/20 border-sky-400 text-sky-300 font-bold'
                       : 'bg-[#101420] hover:bg-[#151b2c] border-[#1a2236] text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -219,9 +220,9 @@ export default function PositionSizeCalculator({
 
           {/* Mode-Specific Input: Risk Tolerance or Manual Lot Stepper */}
           {calcMode === 'RISK_BASED' ? (
-            <div className="p-3 rounded-md bg-[#090c14] border border-[#192134]">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+            <div className="p-3.5 rounded-lg bg-[#070a12] border border-[#131b2e]">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                   <Percent className="w-3.5 h-3.5 text-rose-400" /> Toleransi Risiko Per Trade
                 </label>
                 <div className="flex items-center gap-1 font-mono text-xs">
@@ -241,15 +242,15 @@ export default function PositionSizeCalculator({
                   step={0.5}
                   value={riskPercent}
                   onChange={(e) => setRiskPercent(Number(e.target.value))}
-                  className="w-full accent-rose-500 cursor-pointer h-1.5 bg-[#161c2c] rounded"
+                  className="w-full accent-rose-500 cursor-pointer h-2 bg-[#121929] rounded-lg"
                 />
-                <div className="flex items-center justify-between text-[10px] font-mono">
+                <div className="flex items-center justify-between text-xs font-mono">
                   <button
                     type="button"
                     onClick={() => setRiskPercent(1)}
-                    className={`px-1.5 py-0.5 rounded border ${
+                    className={`px-2 py-1 rounded-md border ${
                       riskPercent === 1
-                        ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300 font-semibold'
+                        ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300 font-bold'
                         : 'bg-[#101420] border-[#1a2236] text-slate-400'
                     }`}
                   >
@@ -258,9 +259,9 @@ export default function PositionSizeCalculator({
                   <button
                     type="button"
                     onClick={() => setRiskPercent(2)}
-                    className={`px-1.5 py-0.5 rounded border ${
+                    className={`px-2 py-1 rounded-md border ${
                       riskPercent === 2
-                        ? 'bg-sky-950/60 border-sky-800 text-sky-300 font-semibold'
+                        ? 'bg-sky-950/60 border-sky-800 text-sky-300 font-bold'
                         : 'bg-[#101420] border-[#1a2236] text-slate-400'
                     }`}
                   >
@@ -269,9 +270,9 @@ export default function PositionSizeCalculator({
                   <button
                     type="button"
                     onClick={() => setRiskPercent(3)}
-                    className={`px-1.5 py-0.5 rounded border ${
+                    className={`px-2 py-1 rounded-md border ${
                       riskPercent === 3
-                        ? 'bg-amber-950/60 border-amber-800 text-amber-300 font-semibold'
+                        ? 'bg-amber-950/60 border-amber-800 text-amber-300 font-bold'
                         : 'bg-[#101420] border-[#1a2236] text-slate-400'
                     }`}
                   >
@@ -280,9 +281,9 @@ export default function PositionSizeCalculator({
                   <button
                     type="button"
                     onClick={() => setRiskPercent(5)}
-                    className={`px-1.5 py-0.5 rounded border ${
+                    className={`px-2 py-1 rounded-md border ${
                       riskPercent === 5
-                        ? 'bg-rose-950/60 border-rose-800 text-rose-300 font-semibold'
+                        ? 'bg-rose-950/60 border-rose-800 text-rose-300 font-bold'
                         : 'bg-[#101420] border-[#1a2236] text-slate-400'
                     }`}
                   >
@@ -292,8 +293,8 @@ export default function PositionSizeCalculator({
               </div>
             </div>
           ) : (
-            <div className="p-3 rounded-md bg-[#090c14] border border-[#192134]">
-              <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between mb-1.5">
+            <div className="p-3.5 rounded-lg bg-[#070a12] border border-[#131b2e]">
+              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between mb-2">
                 <span className="flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-sky-400" /> Jumlah Lot yang Ingin Dibeli
                 </span>
@@ -306,15 +307,22 @@ export default function PositionSizeCalculator({
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
+                  onClick={() => adjustLots(-50)}
+                  className="px-2.5 py-1.5 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded-md text-xs font-mono font-bold"
+                >
+                  -50
+                </button>
+                <button
+                  type="button"
                   onClick={() => adjustLots(-10)}
-                  className="px-2.5 py-1 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded text-xs font-mono font-semibold"
+                  className="px-2.5 py-1.5 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded-md text-xs font-mono font-bold"
                 >
                   -10
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustLots(-1)}
-                  className="px-2.5 py-1 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded text-xs font-mono font-semibold"
+                  className="px-2.5 py-1.5 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded-md text-xs font-mono font-bold"
                 >
                   -1
                 </button>
@@ -323,26 +331,26 @@ export default function PositionSizeCalculator({
                   min={1}
                   value={manualLots}
                   onChange={(e) => setManualLots(Math.max(Number(e.target.value) || 1, 1))}
-                  className="flex-1 text-center bg-[#101420] border border-[#1e273d] rounded py-1 font-mono text-sm font-bold text-white outline-none tabular-nums"
+                  className="flex-1 text-center bg-[#101420] border border-[#1e273d] rounded-md py-1.5 font-mono text-base font-black text-white outline-none tabular-nums"
                 />
                 <button
                   type="button"
                   onClick={() => adjustLots(+1)}
-                  className="px-2.5 py-1 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded text-xs font-mono font-semibold"
+                  className="px-2.5 py-1.5 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded-md text-xs font-mono font-bold"
                 >
                   +1
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustLots(+10)}
-                  className="px-2.5 py-1 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded text-xs font-mono font-semibold"
+                  className="px-2.5 py-1.5 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded-md text-xs font-mono font-bold"
                 >
                   +10
                 </button>
                 <button
                   type="button"
                   onClick={() => adjustLots(+50)}
-                  className="px-2.5 py-1 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded text-xs font-mono font-semibold"
+                  className="px-2.5 py-1.5 bg-[#101420] hover:bg-[#151b2c] border border-[#1e273d] text-slate-300 rounded-md text-xs font-mono font-bold"
                 >
                   +50
                 </button>
@@ -351,81 +359,81 @@ export default function PositionSizeCalculator({
           )}
 
           {/* Toggle for Customizing Entry / SL prices & Broker Fee */}
-          <div className="flex items-center justify-between text-xs px-0.5">
+          <div className="flex items-center justify-between text-xs px-1">
             <button
               onClick={() => setShowPriceSettings(!showPriceSettings)}
-              className="text-slate-400 hover:text-sky-300 flex items-center gap-1 transition-colors text-[11px]"
+              className="text-slate-400 hover:text-sky-300 flex items-center gap-1.5 transition-colors font-medium text-xs"
             >
-              <SlidersHorizontal className="w-3 h-3 text-sky-400" />
-              <span>{showPriceSettings ? 'Sembunyikan' : 'Kustomisasi'} Entry & SL</span>
+              <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400" />
+              <span>{showPriceSettings ? 'Sembunyikan' : 'Kustomisasi'} Entry & Stop Loss</span>
               {showPriceSettings ? (
-                <ChevronUp className="w-3 h-3" />
+                <ChevronUp className="w-3.5 h-3.5" />
               ) : (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3.5 h-3.5" />
               )}
             </button>
 
             {/* Broker Fee Toggle */}
-            <label className="flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200 text-[11px]">
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200 text-xs">
               <input
                 type="checkbox"
                 checked={includeFee}
                 onChange={(e) => setIncludeFee(e.target.checked)}
                 className="rounded accent-sky-500"
               />
-              <span>Fee Sekuritas (~0.15% / 0.25%)</span>
+              <span>Hitung Fee Broker (~0.15% / 0.25%)</span>
             </label>
           </div>
 
           {/* Collapsible Custom Price Inputs */}
           {showPriceSettings && (
-            <div className="p-3 rounded-md bg-[#090c14] border border-[#192134] space-y-2">
-              <div className="flex items-center justify-between pb-1.5 border-b border-[#151b2a] text-[11px]">
-                <span className="font-semibold text-slate-300">Custom Harga:</span>
+            <div className="p-3.5 rounded-lg bg-[#070a12] border border-[#131b2e] space-y-2.5">
+              <div className="flex items-center justify-between pb-2 border-b border-[#141d30] text-xs">
+                <span className="font-semibold text-slate-300">Custom Level Harga Eksekusi:</span>
                 <button
                   type="button"
                   onClick={handleResetPrices}
-                  className="text-sky-400 hover:text-sky-300 flex items-center gap-1 text-[10px]"
+                  className="text-sky-400 hover:text-sky-300 flex items-center gap-1 text-xs"
                 >
-                  <RotateCcw className="w-2.5 h-2.5" /> Reset
+                  <RotateCcw className="w-3 h-3" /> Reset ke Plan Awal
                 </button>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div>
-                  <label className="block text-slate-400 text-[10px] mb-0.5">Entry Price</label>
+                  <label className="block text-slate-400 text-[11px] mb-1">Entry Price</label>
                   <input
                     type="number"
                     value={customEntry}
                     onChange={(e) => setCustomEntry(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-[#1e273d] rounded px-2 py-1 font-mono text-white text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-[#1e273d] rounded-md px-2.5 py-1.5 font-mono text-white text-xs tabular-nums"
                   />
                 </div>
                 <div>
-                  <label className="block text-rose-400 text-[10px] mb-0.5">Stop Loss (SL)</label>
+                  <label className="block text-rose-400 text-[11px] mb-1">Stop Loss (SL)</label>
                   <input
                     type="number"
                     value={customSL}
                     onChange={(e) => setCustomSL(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-rose-900/60 rounded px-2 py-1 font-mono text-rose-300 text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-rose-900/60 rounded-md px-2.5 py-1.5 font-mono text-rose-300 text-xs tabular-nums"
                   />
                 </div>
                 <div>
-                  <label className="block text-emerald-400 text-[10px] mb-0.5">Target 1 (TP1)</label>
+                  <label className="block text-emerald-400 text-[11px] mb-1">Target 1 (TP1)</label>
                   <input
                     type="number"
                     value={customTP1}
                     onChange={(e) => setCustomTP1(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-emerald-900/60 rounded px-2 py-1 font-mono text-emerald-300 text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-emerald-900/60 rounded-md px-2.5 py-1.5 font-mono text-emerald-300 text-xs tabular-nums"
                   />
                 </div>
                 <div>
-                  <label className="block text-emerald-400 text-[10px] mb-0.5">Target 2 (TP2)</label>
+                  <label className="block text-emerald-400 text-[11px] mb-1">Target 2 (TP2)</label>
                   <input
                     type="number"
                     value={customTP2}
                     onChange={(e) => setCustomTP2(Number(e.target.value) || 0)}
-                    className="w-full bg-[#101420] border border-emerald-900/60 rounded px-2 py-1 font-mono text-emerald-300 text-xs tabular-nums"
+                    className="w-full bg-[#101420] border border-emerald-900/60 rounded-md px-2.5 py-1.5 font-mono text-emerald-300 text-xs tabular-nums"
                   />
                 </div>
               </div>
@@ -434,11 +442,11 @@ export default function PositionSizeCalculator({
         </div>
 
         {/* Right Section: The Execution Order Ticket Summary (5 Cols) */}
-        <div className="lg:col-span-5 flex flex-col justify-between p-3.5 rounded-md bg-[#090c14] border border-[#1e283e]">
+        <div className="lg:col-span-5 flex flex-col justify-between p-4 rounded-lg bg-[#070a12] border border-[#19243c] shadow-inner">
           <div>
-            <div className="flex items-center justify-between pb-2 border-b border-[#161c2c]">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1">
-                <Layers className="w-3 h-3" /> Order Ticket
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#141d30]">
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5" /> Order Execution Ticket
               </span>
               <span className="text-[11px] font-mono text-slate-400">
                 R:R Bersih <strong className="text-white">1:{rrRatio}</strong>
@@ -446,21 +454,21 @@ export default function PositionSizeCalculator({
             </div>
 
             {/* Hero Lot Number Display */}
-            <div className="my-2.5 text-center p-2.5 rounded bg-[#101420] border border-[#1a2236]">
-              <span className="text-[11px] text-slate-400 block">Rekomendasi Pembelian:</span>
-              <div className="text-2xl font-bold font-mono tracking-tight text-white mt-0.5 tabular-nums">
-                {activeLots} <span className="text-sm font-semibold text-sky-400">LOT</span>
+            <div className="my-3 text-center p-3 rounded-lg bg-[#0d1322] border border-[#172238]">
+              <span className="text-xs text-slate-400 block font-medium">Alokasi Pembelian Rekomendasi:</span>
+              <div className="text-3xl font-black font-mono tracking-tight text-white mt-0.5 tabular-nums">
+                {activeLots} <span className="text-lg font-bold text-sky-400">LOT</span>
               </div>
-              <div className="text-[11px] text-slate-400 mt-0.5 font-mono">
+              <div className="text-xs text-slate-400 mt-1 font-mono">
                 = {totalShares.toLocaleString('id-ID')} Lembar @ {formatIDR(entry)}
               </div>
             </div>
 
             {/* Financial Details Rows */}
-            <div className="space-y-1.5 text-xs">
+            <div className="space-y-2 text-xs">
               {/* Modal Terpakai */}
-              <div className="flex items-center justify-between p-1.5 rounded bg-[#101420] border border-[#171e30]">
-                <span className="text-slate-400 text-[11px]">Total Modal:</span>
+              <div className="flex items-center justify-between p-2 rounded-md bg-[#101626] border border-[#1a243c]">
+                <span className="text-slate-400 font-medium">Total Dana Beli:</span>
                 <span className="font-mono font-bold text-white tabular-nums">
                   {formatIDR(totalCapitalRequired)}{' '}
                   <span className="text-[10px] text-slate-400 font-normal">({capitalAllocationPct}%)</span>
@@ -468,45 +476,47 @@ export default function PositionSizeCalculator({
               </div>
 
               {/* Skenario Cut Loss */}
-              <div className="flex items-center justify-between p-1.5 rounded bg-rose-950/20 border border-rose-900/30">
+              <div className="flex items-center justify-between p-2 rounded-md bg-rose-950/25 border border-rose-900/40">
                 <div>
-                  <span className="text-rose-400 font-medium text-[11px] block">Cut Loss (SL):</span>
+                  <span className="text-rose-400 font-bold block">Skenario Cut Loss (SL):</span>
                   <span className="text-[10px] text-slate-400 font-mono">
-                    {formatIDR(sl)} (-{priceLossPercent}%)
+                    Harga SL: {formatIDR(sl)} (-{priceLossPercent}%)
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="font-mono font-bold text-rose-400 block tabular-nums">
+                  <span className="font-mono font-black text-rose-400 block tabular-nums">
                     -{formatIDR(netLossRupiah)}
                   </span>
-                  <span className="text-[10px] text-rose-300/70 font-mono">
+                  <span className="text-[10px] text-rose-300/80 font-mono">
                     {netLossPercent}% portofolio
                   </span>
                 </div>
               </div>
 
               {/* Skenario TP1 */}
-              <div className="flex items-center justify-between p-1.5 rounded bg-emerald-950/20 border border-emerald-900/30">
+              <div className="flex items-center justify-between p-2 rounded-md bg-emerald-950/25 border border-emerald-900/40">
                 <div>
-                  <span className="text-emerald-400 font-medium text-[11px] block">Target 1 (TP1):</span>
+                  <span className="text-emerald-400 font-bold block flex items-center gap-1">
+                    <Target className="w-3 h-3" /> Target 1 (TP1):
+                  </span>
                   <span className="text-[10px] text-slate-400 font-mono">
-                    {formatIDR(tp1)} (+{priceProfitTP1Percent}%)
+                    Harga TP1: {formatIDR(tp1)} (+{priceProfitTP1Percent}%)
                   </span>
                 </div>
-                <span className="font-mono font-bold text-emerald-400 tabular-nums">
+                <span className="font-mono font-black text-emerald-400 tabular-nums">
                   +{formatIDR(netProfitTP1)}
                 </span>
               </div>
 
               {/* Skenario TP2 */}
-              <div className="flex items-center justify-between p-1.5 rounded bg-emerald-950/10 border border-emerald-900/20">
+              <div className="flex items-center justify-between p-2 rounded-md bg-emerald-950/15 border border-emerald-900/25">
                 <div>
-                  <span className="text-emerald-300 text-[11px] block">Target 2 (TP2):</span>
+                  <span className="text-emerald-300 font-medium block">Target 2 (TP2):</span>
                   <span className="text-[10px] text-slate-400 font-mono">
-                    {formatIDR(tp2)} (+{priceProfitTP2Percent}%)
+                    Harga TP2: {formatIDR(tp2)} (+{priceProfitTP2Percent}%)
                   </span>
                 </div>
-                <span className="font-mono text-emerald-300 font-semibold tabular-nums">
+                <span className="font-mono font-bold text-emerald-300 tabular-nums">
                   +{formatIDR(netProfitTP2)}
                 </span>
               </div>
@@ -514,9 +524,9 @@ export default function PositionSizeCalculator({
           </div>
 
           {/* Sisa Cash Safety Note */}
-          <div className="mt-2.5 pt-2 border-t border-[#161c2c] flex items-center justify-between text-[11px] text-slate-500">
-            <span>Sisa Cash:</span>
-            <span className="font-mono font-medium text-slate-300 tabular-nums">
+          <div className="mt-3 pt-2.5 border-t border-[#141d30] flex items-center justify-between text-xs text-slate-500">
+            <span>Sisa Cash Portofolio:</span>
+            <span className="font-mono font-bold text-slate-200 tabular-nums">
               {formatIDR(Math.max(portfolioCapital - totalCapitalRequired, 0))}
             </span>
           </div>

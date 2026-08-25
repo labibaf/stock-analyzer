@@ -19,12 +19,12 @@ export default function AICopilotCard({
   modelUsed,
 }: AICopilotCardProps) {
   return (
-    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4 flex flex-col justify-between h-full">
+    <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 flex flex-col justify-between h-full shadow-lg">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#182032]">
+        <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#141d30]">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#161c2c] border border-[#232d46] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
               {isAIGenerated ? (
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               ) : (
