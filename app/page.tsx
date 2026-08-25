@@ -10,6 +10,8 @@ import TradingViewChart from '@/components/TradingViewChart';
 import AICopilotCard from '@/components/AICopilotCard';
 import FundamentalStatsCard from '@/components/FundamentalStatsCard';
 import TechnicalIndicatorsTable from '@/components/TechnicalIndicatorsTable';
+import AISettingsModal, { getStoredUserAIConfig } from '@/components/AISettingsModal';
+import { AI_PROVIDERS, AIProviderId } from '@/lib/ai-config';
 import { AlertTriangle, RefreshCw, ShieldCheck } from 'lucide-react';
 
 export default function HomePage() {
@@ -18,11 +20,30 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // AI Modal & BYOK Configuration
+  const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
+  const [userAIConfig, setUserAIConfig] = useState<{
+    provider: AIProviderId;
+    apiKey: string;
+    model: string;
+  }>(getStoredUserAIConfig);
+
   const fetchAnalysis = useCallback(async (tickerSymbol: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/analyze?ticker=${encodeURIComponent(tickerSymbol)}`);
+      const storedAI = getStoredUserAIConfig();
+      const headers: Record<string, string> = {};
+
+      if (storedAI.apiKey) {
+        headers['x-ai-provider'] = storedAI.provider;
+        headers['x-ai-api-key'] = storedAI.apiKey;
+        headers['x-ai-model'] = storedAI.model;
+      }
+
+      const response = await fetch(`/api/analyze?ticker=${encodeURIComponent(tickerSymbol)}`, {
+        headers,
+      });
       const result = await response.json();
 
       if (!response.ok) {
@@ -47,7 +68,18 @@ export default function HomePage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/analyze?ticker=${encodeURIComponent(ticker)}`);
+        const storedAI = getStoredUserAIConfig();
+        const headers: Record<string, string> = {};
+
+        if (storedAI.apiKey) {
+          headers['x-ai-provider'] = storedAI.provider;
+          headers['x-ai-api-key'] = storedAI.apiKey;
+          headers['x-ai-model'] = storedAI.model;
+        }
+
+        const response = await fetch(`/api/analyze?ticker=${encodeURIComponent(ticker)}`, {
+          headers,
+        });
         const result = await response.json();
         if (ignore) return;
 
@@ -80,6 +112,16 @@ export default function HomePage() {
     setTicker(newTicker);
   };
 
+  const handleSavedAISettings = () => {
+    const updated = getStoredUserAIConfig();
+    setUserAIConfig(updated);
+    // Re-run analysis with updated AI key
+    fetchAnalysis(ticker);
+  };
+
+  const activeProvider = AI_PROVIDERS[userAIConfig.provider];
+  const hasCustomKey = Boolean(userAIConfig.apiKey);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#090a0f]">
       {/* Top Navigation & Quick Stock Chips */}
@@ -89,6 +131,9 @@ export default function HomePage() {
         isLoading={isLoading}
         isAIGenerated={Boolean(data?.isAIGenerated)}
         modelUsed={data?.modelUsed}
+        onOpenAISettings={() => setIsAISettingsOpen(true)}
+        activeProviderName={activeProvider?.name}
+        hasCustomKey={hasCustomKey}
       />
 
       {/* Main Content Area (Full Width Fluid) */}
@@ -118,33 +163,26 @@ export default function HomePage() {
               <div className="h-56 rounded-lg bg-[#0e121d] border border-[#1c2438]" />
             </div>
             <div className="h-44 rounded-lg bg-[#0e121d] border border-[#1c2438]" />
-            <div className="h-[460px] rounded-lg bg-[#0e121d] border border-[#1c2438]" />
+            <div className="h-96 rounded-lg bg-[#0e121d] border border-[#1c2438]" />
           </div>
         )}
 
-        {/* Data Display */}
+        {/* Main Dashboard Content */}
         {data && (
           <div className="space-y-4">
-            {/* Row 1: Scorecard (Metrics) & Swing Plan Card */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              {/* Left Column: Key Stats & Metric Gauges */}
-              <div className="lg:col-span-6">
-                <Scorecard quote={data.technicalSummary.quote} tech={data.technicalSummary} />
-              </div>
-
-              {/* Right Column: Swing Action Plan & Targets */}
-              <div className="lg:col-span-6">
-                <SwingPlanCard
-                  ticker={data.ticker}
-                  name={data.name}
-                  currentPrice={data.technicalSummary.quote.currentPrice}
-                  recommendation={data.recommendation}
-                  setupTitle={data.setupTitle}
-                  confidenceScore={data.confidenceScore}
-                  actionPlan={data.actionPlan}
-                  isAIGenerated={data.isAIGenerated}
-                />
-              </div>
+            {/* Row 1: Stock Scorecard & Swing Trade Action Plan */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Scorecard quote={data.technicalSummary.quote} tech={data.technicalSummary} />
+              <SwingPlanCard
+                ticker={data.ticker}
+                name={data.name}
+                currentPrice={data.technicalSummary.quote.currentPrice}
+                recommendation={data.recommendation}
+                setupTitle={data.setupTitle}
+                confidenceScore={data.confidenceScore}
+                actionPlan={data.actionPlan}
+                isAIGenerated={data.isAIGenerated}
+              />
             </div>
 
             {/* Row 2: Interactive Position Sizing & Money Management Calculator */}
@@ -159,7 +197,7 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Row 3: Interactive Candlestick Chart (with EMAs & Bollinger Bands) */}
+            {/* Row 3: Interactive Candlestick Chart (with EMAs, Bollinger Bands, & Multi-Timeframe) */}
             <div>
               <TradingViewChart
                 key={data.ticker}
@@ -196,13 +234,21 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Row 5: Complete Technical Indicators Table */}
+            {/* Row 5: Complete Technical Indicators Consensus Table */}
             <div>
               <TechnicalIndicatorsTable tech={data.technicalSummary} />
             </div>
           </div>
         )}
       </main>
+
+      {/* BYOK AI Settings Modal */}
+      <AISettingsModal
+        key={isAISettingsOpen ? 'open' : 'closed'}
+        isOpen={isAISettingsOpen}
+        onClose={() => setIsAISettingsOpen(false)}
+        onSaved={handleSavedAISettings}
+      />
 
       {/* Footer & Disclaimer */}
       <footer className="border-t border-[#141d30] bg-[#07080c] mt-8 py-4 text-slate-500 text-xs">

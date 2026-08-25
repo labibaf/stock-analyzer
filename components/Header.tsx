@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Sparkles, Cpu } from 'lucide-react';
+import { Search, Sparkles, Cpu, Settings } from 'lucide-react';
 import { POPULAR_IDX_STOCKS } from '@/lib/idx-rules';
 
 interface HeaderProps {
@@ -10,6 +10,9 @@ interface HeaderProps {
   isLoading: boolean;
   isAIGenerated: boolean;
   modelUsed?: string;
+  onOpenAISettings: () => void;
+  activeProviderName?: string;
+  hasCustomKey?: boolean;
 }
 
 export default function Header({
@@ -18,6 +21,9 @@ export default function Header({
   isLoading,
   isAIGenerated,
   modelUsed,
+  onOpenAISettings,
+  activeProviderName,
+  hasCustomKey,
 }: HeaderProps) {
   const [searchInput, setSearchInput] = useState('');
 
@@ -30,7 +36,7 @@ export default function Header({
   };
 
   return (
-    <header className="border-b border-[#162035] bg-[#080b13]/95 sticky top-0 z-50 backdrop-blur-sm">
+    <header className="border-b border-[#162035] bg-[#080b13]/95 sticky top-0 z-40 backdrop-blur-sm">
       <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Logo & Product Title */}
@@ -46,8 +52,8 @@ export default function Header({
             </span>
           </div>
 
-          {/* Search Form & Status */}
-          <div className="flex items-center gap-2.5 flex-1 max-w-md sm:ml-auto">
+          {/* Search Form & AI Key Settings Button */}
+          <div className="flex items-center gap-2.5 flex-1 max-w-lg sm:ml-auto">
             <form onSubmit={handleSubmit} className="relative w-full">
               <input
                 type="text"
@@ -66,27 +72,34 @@ export default function Header({
               </button>
             </form>
 
-            {/* AI Status Indicator */}
-            <div
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0d121f] border border-[#1c273f] text-[11px] font-semibold text-slate-300 whitespace-nowrap"
+            {/* AI Key Settings Trigger Button (BYOK) */}
+            <button
+              type="button"
+              onClick={onOpenAISettings}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-all whitespace-nowrap ${
+                hasCustomKey || isAIGenerated
+                  ? 'bg-emerald-950/40 border-emerald-700/80 text-emerald-300 hover:bg-emerald-900/40'
+                  : 'bg-[#0d121f] border-[#1c273f] text-slate-300 hover:bg-[#151d30] hover:text-white'
+              }`}
               title={
-                isAIGenerated
-                  ? `AI Mode Aktif (${modelUsed || 'Gemini Flash Free'})`
-                  : 'Deterministic Engine'
+                hasCustomKey
+                  ? `AI Key Aktif: ${activeProviderName} (${modelUsed || 'Model Kustom'})`
+                  : 'Klik untuk memasukkan API Key AI Anda sendiri (Gemini, Groq, OpenAI, Claude, DeepSeek)'
               }
             >
-              {isAIGenerated ? (
+              {hasCustomKey || isAIGenerated ? (
                 <>
-                  <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span className="text-emerald-400">Gemini</span>
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>AI: {activeProviderName || 'Gemini'}</span>
                 </>
               ) : (
                 <>
-                  <Cpu className="w-3 h-3 text-slate-400" />
-                  <span>Algo</span>
+                  <Cpu className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Algo Mode</span>
                 </>
               )}
-            </div>
+              <Settings className="w-3 h-3 text-slate-400 ml-0.5 opacity-70" />
+            </button>
           </div>
         </div>
 

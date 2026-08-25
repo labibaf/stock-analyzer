@@ -51,13 +51,17 @@ Aplikasi ini dibangun menggunakan **Next.js 16 (App Router)** dan siap di-deploy
    - **Build Command**: `next build` (default).
    - **Output Directory**: `.next` (default).
 
-4. **Tambahkan Environment Variables (Opsional)**:
-   Di bagian **"Environment Variables"**, tambahkan key berikut jika ingin mengaktifkan sintesis AI Gemini:
-   | Key | Value | Keterangan |
-   |---|---|---|
-   | `GEMINI_API_KEY` | `AIzaSy...` | Dapatkan gratis di [Google AI Studio](https://aistudio.google.com/app/apikey) |
+4. **Konfigurasi AI (BYOK - Bring Your Own Key)**:
+   Aplikasi ini mendukung mode **BYOK (Bring Your Own Key)** di mana setiap pengguna bisa memasukkan API Key AI pribadi mereka langsung melalui tombol **"⚙️ AI Settings"** di header aplikasi!
+   
+   **Provider AI yang Didukung:**
+   - 🟢 **Google Gemini** (Free Tier): `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`
+   - ⚡ **Groq Cloud** (Free Tier Super Cepat): `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`
+   - 🌐 **OpenRouter** (Multi-Model Hub): `deepseek/deepseek-chat`, `meta-llama/llama-3.3-70b`
+   - 🤖 **OpenAI**: `gpt-4o-mini`, `gpt-4o`
+   - 🧠 **Anthropic Claude**: `claude-3-5-haiku`, `claude-3-5-sonnet`
 
-   *(Catatan: Jika dikosongkan, aplikasi akan otomatis menggunakan Deterministic Algorithmic Fallback Engine tanpa error).*
+   *(Catatan: Anda juga dapat memasukkan `GEMINI_API_KEY` di Environment Variables Vercel sebagai default fallback jika diinginkan).*
 
 5. **Klik "Deploy"**:
    - Tunggu proses build selama ~1 menit.

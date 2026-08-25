@@ -6,7 +6,8 @@ import {
   evaluateTechnicalSummary,
   generateAlgorithmicSwingPlan,
 } from '@/lib/technical-analysis';
-import { generateAISwingAnalysis } from '@/lib/gemini';
+import { generateAISwingAnalysis } from '@/lib/ai-service';
+import { AIProviderId } from '@/lib/ai-config';
 
 // Initialize YahooFinance instance
 const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] });
@@ -14,6 +15,13 @@ const yf = new YahooFinance({ suppressNotices: ['ripHistorical', 'yahooSurvey'] 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const rawTicker = searchParams.get('ticker') || 'BBCA';
+
+  // Extract user-provided custom AI API Key from request headers (BYOK pattern)
+  const userProvider = (request.headers.get('x-ai-provider') || undefined) as
+    | AIProviderId
+    | undefined;
+  const userApiKey = request.headers.get('x-ai-api-key') || undefined;
+  const userModel = request.headers.get('x-ai-model') || undefined;
 
   try {
     const { cleanSymbol, yahooSymbol } = normalizeIDXTicker(rawTicker);
@@ -133,8 +141,12 @@ export async function GET(request: NextRequest) {
     // 2. Deterministic Algorithmic Plan
     const algorithmicPlan = generateAlgorithmicSwingPlan(summary);
 
-    // 3. AI Reasoning Synthesis (Gemini Free Tier)
-    const aiOutput = await generateAISwingAnalysis(summary);
+    // 3. AI Reasoning Synthesis (User BYOK or Server Fallback)
+    const aiOutput = await generateAISwingAnalysis(summary, {
+      provider: userProvider,
+      apiKey: userApiKey,
+      model: userModel,
+    });
 
     // Assemble final response
     const finalResult: SwingAnalysisResult = {
