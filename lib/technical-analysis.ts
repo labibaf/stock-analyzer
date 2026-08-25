@@ -1,25 +1,28 @@
 import {
   CandleData,
-  EMAPoint,
+  LinePoint,
   TechnicalSummary,
   TrendStatus,
   StockQuote,
   MACDResult,
+  StochasticResult,
+  BollingerBandsResult,
+  MFIResult,
+  CandlePattern,
   RecommendationType,
   SwingActionPlan,
 } from './types';
 import { roundToIDXTick } from './idx-rules';
 
 /**
- * Calculates Exponential Moving Average (EMA) for an array of closing prices
+ * Calculates Exponential Moving Average (EMA)
  */
-export function calculateEMA(candles: CandleData[], period: number): EMAPoint[] {
+export function calculateEMA(candles: CandleData[], period: number): LinePoint[] {
   if (candles.length < period) return [];
 
   const k = 2 / (period + 1);
-  const emaData: EMAPoint[] = [];
+  const emaData: LinePoint[] = [];
 
-  // Initial SMA as first EMA seed
   let sum = 0;
   for (let i = 0; i < period; i++) {
     sum += candles[i].close;
@@ -46,11 +49,8 @@ export function calculateRSI(candles: CandleData[], period: number = 14): number
 
   for (let i = 1; i <= period; i++) {
     const diff = candles[i].close - candles[i - 1].close;
-    if (diff >= 0) {
-      gains += diff;
-    } else {
-      losses += Math.abs(diff);
-    }
+    if (diff >= 0) gains += diff;
+    else losses += Math.abs(diff);
   }
 
   let avgGain = gains / period;
@@ -78,18 +78,12 @@ export function calculateRSI(candles: CandleData[], period: number = 14): number
  */
 export function calculateMACD(candles: CandleData[]): MACDResult {
   if (candles.length < 35) {
-    return {
-      macd: 0,
-      signal: 0,
-      histogram: 0,
-      crossStatus: 'NEUTRAL',
-    };
+    return { macd: 0, signal: 0, histogram: 0, crossStatus: 'NEUTRAL' };
   }
 
   const ema12 = calculateEMA(candles, 12);
   const ema26 = calculateEMA(candles, 26);
 
-  // Match timestamps between EMA 12 and EMA 26
   const macdLineSeries: { time: string; value: number }[] = [];
   const ema26Map = new Map<string, number>();
   ema26.forEach((item) => ema26Map.set(item.time, item.value));
@@ -108,7 +102,6 @@ export function calculateMACD(candles: CandleData[]): MACDResult {
     return { macd: 0, signal: 0, histogram: 0, crossStatus: 'NEUTRAL' };
   }
 
-  // Calculate 9 EMA of the MACD Line (Signal Line)
   const kSignal = 2 / (9 + 1);
   let sum = 0;
   for (let i = 0; i < 9; i++) {
@@ -138,6 +131,290 @@ export function calculateMACD(candles: CandleData[]): MACDResult {
     histogram: Number(histogram.toFixed(2)),
     crossStatus,
   };
+}
+
+/**
+ * Calculates Stochastic Oscillator (14, 3, 3)
+ */
+export function calculateStochastic(
+  candles: CandleData[],
+  periodK: number = 14,
+  smoothK: number = 3,
+  smoothD: number = 3
+): StochasticResult {
+  if (candles.length < periodK + smoothK + smoothD) {
+    return { k: 50, d: 50, crossStatus: 'NEUTRAL', status: 'HEALTHY' };
+  }
+
+  const rawKList: number[] = [];
+
+  for (let i = periodK - 1; i < candles.length; i++) {
+    let highestHigh = -Infinity;
+    let lowestLow = Infinity;
+
+    for (let j = i - periodK + 1; j <= i; j++) {
+      if (candles[j].high > highestHigh) highestHigh = candles[j].high;
+      if (candles[j].low < lowestLow) lowestLow = candles[j].low;
+    }
+
+    const currentClose = candles[i].close;
+    const diff = highestHigh - lowestLow;
+    const kVal = diff === 0 ? 50 : ((currentClose - lowestLow) / diff) * 100;
+    rawKList.push(kVal);
+  }
+
+  // Smooth %K
+  const smoothedK: number[] = [];
+  for (let i = smoothK - 1; i < rawKList.length; i++) {
+    let sum = 0;
+    for (let j = i - smoothK + 1; j <= i; j++) {
+      sum += rawKList[j];
+    }
+    smoothedK.push(sum / smoothK);
+  }
+
+  // Smooth %D
+  const smoothedD: number[] = [];
+  for (let i = smoothD - 1; i < smoothedK.length; i++) {
+    let sum = 0;
+    for (let j = i - smoothD + 1; j <= i; j++) {
+      sum += smoothedK[j];
+    }
+    smoothedD.push(sum / smoothD);
+  }
+
+  const latestK = smoothedK[smoothedK.length - 1] ?? 50;
+  const prevK = smoothedK[smoothedK.length - 2] ?? latestK;
+  const latestD = smoothedD[smoothedD.length - 1] ?? 50;
+  const prevD = smoothedD[smoothedD.length - 2] ?? latestD;
+
+  let crossStatus: 'BULLISH_CROSS' | 'BEARISH_CROSS' | 'NEUTRAL' = 'NEUTRAL';
+  if (prevK <= prevD && latestK > latestD) {
+    crossStatus = 'BULLISH_CROSS';
+  } else if (prevK >= prevD && latestK < latestD) {
+    crossStatus = 'BEARISH_CROSS';
+  }
+
+  let status: 'OVERSOLD' | 'HEALTHY' | 'OVERBOUGHT' = 'HEALTHY';
+  if (latestK < 20 && latestD < 25) {
+    status = 'OVERSOLD';
+  } else if (latestK > 80 && latestD > 75) {
+    status = 'OVERBOUGHT';
+  }
+
+  return {
+    k: Number(latestK.toFixed(1)),
+    d: Number(latestD.toFixed(1)),
+    crossStatus,
+    status,
+  };
+}
+
+/**
+ * Calculates Bollinger Bands (20, 2) and detects Volatility Squeeze
+ */
+export function calculateBollingerBands(
+  candles: CandleData[],
+  period: number = 20,
+  stdDevMult: number = 2
+): {
+  result: BollingerBandsResult;
+  upperSeries: LinePoint[];
+  lowerSeries: LinePoint[];
+} {
+  if (candles.length < period) {
+    const price = candles[candles.length - 1]?.close || 1000;
+    return {
+      result: {
+        upper: price * 1.05,
+        middle: price,
+        lower: price * 0.95,
+        bandwidth: 10,
+        isSqueeze: false,
+      },
+      upperSeries: [],
+      lowerSeries: [],
+    };
+  }
+
+  const upperSeries: LinePoint[] = [];
+  const lowerSeries: LinePoint[] = [];
+  const bandwidthHistory: number[] = [];
+
+  for (let i = period - 1; i < candles.length; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      sum += candles[j].close;
+    }
+    const middle = sum / period;
+
+    let varianceSum = 0;
+    for (let j = i - period + 1; j <= i; j++) {
+      varianceSum += Math.pow(candles[j].close - middle, 2);
+    }
+    const stdDev = Math.sqrt(varianceSum / period);
+    const upper = middle + stdDevMult * stdDev;
+    const lower = middle - stdDevMult * stdDev;
+    const bandwidth = middle > 0 ? ((upper - lower) / middle) * 100 : 0;
+
+    upperSeries.push({ time: candles[i].time, value: roundToIDXTick(upper) });
+    lowerSeries.push({ time: candles[i].time, value: roundToIDXTick(lower) });
+    bandwidthHistory.push(bandwidth);
+  }
+
+  const latestUpper = upperSeries[upperSeries.length - 1]?.value || 0;
+  const latestLower = lowerSeries[lowerSeries.length - 1]?.value || 0;
+  const latestMiddle = Math.round((latestUpper + latestLower) / 2);
+  const latestBandwidth = bandwidthHistory[bandwidthHistory.length - 1] || 0;
+
+  // Squeeze Detection: Compare current bandwidth with lowest 15% threshold over last 60 days
+  const recentBandwidths = bandwidthHistory.slice(-60);
+  const sortedBW = [...recentBandwidths].sort((a, b) => a - b);
+  const squeezeThreshold = sortedBW[Math.floor(sortedBW.length * 0.15)] || sortedBW[0];
+  const isSqueeze = latestBandwidth <= squeezeThreshold && latestBandwidth < 8.0;
+
+  return {
+    result: {
+      upper: latestUpper,
+      middle: latestMiddle,
+      lower: latestLower,
+      bandwidth: Number(latestBandwidth.toFixed(2)),
+      isSqueeze,
+    },
+    upperSeries,
+    lowerSeries,
+  };
+}
+
+/**
+ * Calculates Money Flow Index (MFI 14)
+ */
+export function calculateMFI(candles: CandleData[], period: number = 14): MFIResult {
+  if (candles.length <= period) {
+    return { value: 50, status: 'HEALTHY' };
+  }
+
+  const typicalPrices: number[] = candles.map((c) => (c.high + c.low + c.close) / 3);
+  const rawMoneyFlows: number[] = typicalPrices.map((tp, idx) => tp * candles[idx].volume);
+
+  let positiveFlow = 0;
+  let negativeFlow = 0;
+
+  for (let i = candles.length - period; i < candles.length; i++) {
+    if (typicalPrices[i] > typicalPrices[i - 1]) {
+      positiveFlow += rawMoneyFlows[i];
+    } else if (typicalPrices[i] < typicalPrices[i - 1]) {
+      negativeFlow += rawMoneyFlows[i];
+    }
+  }
+
+  let mfi = 50;
+  if (negativeFlow === 0) {
+    mfi = 100;
+  } else {
+    const moneyRatio = positiveFlow / negativeFlow;
+    mfi = 100 - 100 / (1 + moneyRatio);
+  }
+
+  mfi = Number(mfi.toFixed(1));
+  let status: 'OVERSOLD' | 'HEALTHY' | 'OVERBOUGHT' = 'HEALTHY';
+  if (mfi < 25) status = 'OVERSOLD';
+  else if (mfi > 75) status = 'OVERBOUGHT';
+
+  return { value: mfi, status };
+}
+
+/**
+ * Detects Candlestick Patterns from the latest daily candles
+ */
+export function detectCandlestickPattern(candles: CandleData[]): CandlePattern | null {
+  if (candles.length < 3) return null;
+
+  const current = candles[candles.length - 1];
+  const prev = candles[candles.length - 2];
+  const prev2 = candles[candles.length - 3];
+
+  const currentBody = Math.abs(current.close - current.open);
+  const currentRange = current.high - current.low || 1;
+  const currentUpperShadow = current.high - Math.max(current.open, current.close);
+  const currentLowerShadow = Math.min(current.open, current.close) - current.low;
+  const isCurrentGreen = current.close >= current.open;
+
+  const prevBody = Math.abs(prev.close - prev.open);
+  const isPrevGreen = prev.close >= prev.open;
+
+  // 1. Doji (Indecision)
+  if (currentBody <= currentRange * 0.1) {
+    return {
+      name: 'Doji',
+      type: 'NEUTRAL',
+      description: 'Pola Doji menunjukkan keragu-raguan antara buyer dan seller di pasar.',
+      reliability: 'MEDIUM',
+    };
+  }
+
+  // 2. Bullish Engulfing
+  if (!isPrevGreen && isCurrentGreen && current.open <= prev.close && current.close >= prev.open && currentBody > prevBody * 1.1) {
+    return {
+      name: 'Bullish Engulfing',
+      type: 'BULLISH',
+      description: 'Candle hijau membungkus candle merah sebelumnya, sinyal kuat pembalikan arah naik.',
+      reliability: 'HIGH',
+    };
+  }
+
+  // 3. Bearish Engulfing
+  if (isPrevGreen && !isCurrentGreen && current.open >= prev.close && current.close <= prev.open && currentBody > prevBody * 1.1) {
+    return {
+      name: 'Bearish Engulfing',
+      type: 'BEARISH',
+      description: 'Candle merah membungkus candle hijau sebelumnya, sinyal koreksi/tekanan jual.',
+      reliability: 'HIGH',
+    };
+  }
+
+  // 4. Hammer (Bullish Reversal on support)
+  if (currentLowerShadow >= 2 * currentBody && currentUpperShadow <= 0.25 * currentBody && currentRange > 0) {
+    return {
+      name: 'Hammer',
+      type: 'BULLISH',
+      description: 'Ekor bawah panjang menunjukkan buyer berhasil menolak harga murah dan memantul.',
+      reliability: 'HIGH',
+    };
+  }
+
+  // 5. Shooting Star (Bearish Reversal on resistance)
+  if (currentUpperShadow >= 2 * currentBody && currentLowerShadow <= 0.25 * currentBody && currentRange > 0) {
+    return {
+      name: 'Shooting Star',
+      type: 'BEARISH',
+      description: 'Ekor atas panjang menunjukkan seller menolak kenaikan harga di level resistance.',
+      reliability: 'HIGH',
+    };
+  }
+
+  // 6. Inverted Hammer (Bullish Reversal)
+  if (currentUpperShadow >= 2 * currentBody && currentLowerShadow <= 0.25 * currentBody && !isPrevGreen) {
+    return {
+      name: 'Inverted Hammer',
+      type: 'BULLISH',
+      description: 'Peluang pembalikan arah setelah fase koreksi tertekan.',
+      reliability: 'MEDIUM',
+    };
+  }
+
+  // 7. Morning Star (3 candles)
+  const isPrev2Red = prev2.close < prev2.open;
+  if (isPrev2Red && prevBody < currentRange * 0.4 && isCurrentGreen && current.close > (prev2.open + prev2.close) / 2) {
+    return {
+      name: 'Morning Star',
+      type: 'BULLISH',
+      description: 'Pola 3 candle formasi bintang fajar, sinyal kuat dimulainya tren naik baru.',
+      reliability: 'HIGH',
+    };
+  }
+
+  return null;
 }
 
 /**
@@ -202,15 +479,13 @@ export function findSupportResistanceLevels(
     if (isHigh) swingHighs.push(c.high);
   }
 
-  // Filter supports below current price
   const validSupports = swingLows
     .filter((p) => p < currentPrice)
-    .sort((a, b) => b - a); // highest to lowest below current
+    .sort((a, b) => b - a);
 
-  // Filter resistances above current price
   const validResistances = swingHighs
     .filter((p) => p > currentPrice)
-    .sort((a, b) => a - b); // lowest to highest above current
+    .sort((a, b) => a - b);
 
   const support1 = validSupports[0] ?? roundToIDXTick(currentPrice * 0.95);
   const support2 = validSupports[1] ?? roundToIDXTick(support1 * 0.96);
@@ -234,9 +509,11 @@ export function evaluateTechnicalSummary(
   quote: StockQuote
 ): {
   summary: TechnicalSummary;
-  ema20Points: EMAPoint[];
-  ema50Points: EMAPoint[];
-  ema200Points: EMAPoint[];
+  ema20Points: LinePoint[];
+  ema50Points: LinePoint[];
+  ema200Points: LinePoint[];
+  bbUpperPoints: LinePoint[];
+  bbLowerPoints: LinePoint[];
 } {
   const ema20Points = calculateEMA(candles, 20);
   const ema50Points = calculateEMA(candles, 50);
@@ -248,6 +525,11 @@ export function evaluateTechnicalSummary(
 
   const rsi14 = calculateRSI(candles, 14);
   const macd = calculateMACD(candles);
+  const stochastic = calculateStochastic(candles, 14, 3, 3);
+  const { result: bollinger, upperSeries: bbUpperPoints, lowerSeries: bbLowerPoints } =
+    calculateBollingerBands(candles, 20, 2);
+  const mfi14 = calculateMFI(candles, 14);
+  const detectedPattern = detectCandlestickPattern(candles);
   const atr14 = calculateATR(candles, 14);
 
   // Volume 20 SMA
@@ -307,6 +589,10 @@ export function evaluateTechnicalSummary(
     rsi14,
     rsiStatus,
     macd,
+    stochastic,
+    bollinger,
+    mfi14,
+    detectedPattern,
     atr14,
     volumeRatio20: Number(volumeRatio20.toFixed(2)),
     volumeSurge,
@@ -321,6 +607,8 @@ export function evaluateTechnicalSummary(
     ema20Points,
     ema50Points,
     ema200Points,
+    bbUpperPoints,
+    bbLowerPoints,
   };
 }
 
@@ -349,28 +637,46 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
   let targetPrice2 = tech.resistance2;
   let stopLoss = roundToIDXTick(tech.support1 - 0.5 * atr);
 
+  if (tech.bollinger.isSqueeze) {
+    setupTitle = '🔥 Bollinger Squeeze (Potensi Breakout Ledakan Volatilitas)';
+    confidenceScore += 5;
+  }
+
   if (tech.trend === 'STRONG_UPTREND' && tech.volumeSurge) {
     recommendation = 'BUY_ON_BREAKOUT';
-    setupTitle = 'Strong Uptrend Momentum Breakout';
-    confidenceScore = 85;
+    setupTitle = tech.bollinger.isSqueeze
+      ? '🔥 Squeeze Breakout with Volume Surge'
+      : 'Strong Uptrend Momentum Breakout';
+    confidenceScore = 88;
     buyZoneLow = roundToIDXTick(price * 0.99);
     buyZoneHigh = roundToIDXTick(price * 1.02);
     entryPrice = price;
     targetPrice1 = roundToIDXTick(Math.max(tech.resistance1, price + 1.8 * atr));
     targetPrice2 = roundToIDXTick(Math.max(tech.resistance2, targetPrice1 + 1.5 * atr));
     stopLoss = roundToIDXTick(Math.max(tech.support1, price - 1.0 * atr));
-    summaryThesis = `${tech.quote.ticker} berada dalam struktur Strong Uptrend di atas EMA 20/50/200 dengan volume transaksi ${tech.volumeRatio20}x di atas rata-rata 20 hari. Momentum bullish kuat untuk menguji level resistance selanjutnya.`;
-  } else if (tech.trend === 'PULLBACK_UPTREND' || (tech.trend === 'STRONG_UPTREND' && tech.rsiStatus === 'HEALTHY_BULLISH')) {
+    summaryThesis = `${tech.quote.ticker} berada dalam struktur Strong Uptrend di atas EMA 20/50/200 dengan lonjakan volume ${tech.volumeRatio20}x di atas rata-rata. ${
+      tech.detectedPattern ? `Terdeteksi pola ${tech.detectedPattern.name}. ` : ''
+    }Momentum bullish kuat untuk menguji level resistance selanjutnya.`;
+  } else if (
+    tech.trend === 'PULLBACK_UPTREND' ||
+    (tech.trend === 'STRONG_UPTREND' && tech.rsiStatus === 'HEALTHY_BULLISH') ||
+    (tech.stochastic.status === 'OVERSOLD' && tech.stochastic.crossStatus === 'BULLISH_CROSS')
+  ) {
     recommendation = 'BUY_ON_WEAKNESS';
-    setupTitle = 'Pullback Buy on EMA Support';
-    confidenceScore = 80;
+    setupTitle =
+      tech.stochastic.crossStatus === 'BULLISH_CROSS'
+        ? 'Stochastic Bullish Cross on EMA Support'
+        : 'Pullback Buy on EMA Support';
+    confidenceScore = 82;
     buyZoneLow = roundToIDXTick(Math.min(tech.ema20, tech.support1));
     buyZoneHigh = roundToIDXTick(price);
     entryPrice = roundToIDXTick((buyZoneLow + buyZoneHigh) / 2);
     targetPrice1 = roundToIDXTick(Math.max(tech.resistance1, entryPrice + 1.8 * atr));
     targetPrice2 = roundToIDXTick(Math.max(tech.resistance2, targetPrice1 + 1.5 * atr));
     stopLoss = roundToIDXTick(buyZoneLow - 0.7 * atr);
-    summaryThesis = `${tech.quote.ticker} sedang mengalami koreksi sehat (pullback) menguji support dinamis EMA 20/50 dengan RSI di level ${tech.rsi14}. Menawarkan entry risk-to-reward yang menarik untuk swing trader.`;
+    summaryThesis = `${tech.quote.ticker} sedang mengalami koreksi sehat (pullback) menguji support dinamis EMA 20/50 dengan RSI ${tech.rsi14} dan Stochastic ${tech.stochastic.k}/${tech.stochastic.d}. ${
+      tech.detectedPattern ? `Konfirmasi pola candlestick ${tech.detectedPattern.name}. ` : ''
+    }Menawarkan entry risk-to-reward yang menarik untuk swing trader.`;
   } else if (tech.rsiStatus === 'OVERSOLD' || price <= tech.support1 * 1.02) {
     recommendation = 'BUY_ON_WEAKNESS';
     setupTitle = 'Oversold Technical Rebound';
@@ -381,7 +687,7 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
     targetPrice1 = roundToIDXTick(Math.max(tech.ema20, tech.resistance1));
     targetPrice2 = roundToIDXTick(Math.max(tech.resistance2, targetPrice1 + 1.5 * atr));
     stopLoss = roundToIDXTick(tech.support2 - 0.5 * atr);
-    summaryThesis = `${tech.quote.ticker} memasuki zona jenuh jual (RSI ${tech.rsi14} < 32) di sekitar area support kuat ${tech.support1}. Berpotensi mengalami technical rebound jangka pendek.`;
+    summaryThesis = `${tech.quote.ticker} memasuki zona jenuh jual (RSI ${tech.rsi14} < 32, MFI ${tech.mfi14.value}) di sekitar area support kuat ${tech.support1}. Berpotensi mengalami technical rebound jangka pendek.`;
   } else if (tech.trend === 'DOWNTREND') {
     recommendation = 'AVOID';
     setupTitle = 'Downtrend Tertekan di Bawah EMA 200';
@@ -395,7 +701,9 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
     summaryThesis = `${tech.quote.ticker} masih berada di bawah tekanan tren bearish (di bawah EMA 50 dan EMA 200). Disarankan menghindari entry swing agresif hingga terjadi breakout struktur tren.`;
   } else {
     recommendation = 'WAIT_AND_SEE';
-    setupTitle = 'Sideways Menunggu Volume Breakout';
+    setupTitle = tech.bollinger.isSqueeze
+      ? '🔥 Sideways Squeeze (Menunggu Arah Breakout)'
+      : 'Sideways Menunggu Volume Breakout';
     confidenceScore = 65;
     buyZoneLow = roundToIDXTick(tech.support1);
     buyZoneHigh = roundToIDXTick(tech.support1 * 1.02);
@@ -406,7 +714,7 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
     summaryThesis = `${tech.quote.ticker} bergerak sideways di rentang support ${tech.support1} dan resistance ${tech.resistance1}. Disarankan menunggu konfirmasi volume breakout sebelum membuka posisi atau antri di dekat support.`;
   }
 
-  // Safety checks: ensure stop loss < entry and target > entry
+  // Safety checks
   if (stopLoss >= entryPrice) {
     stopLoss = roundToIDXTick(entryPrice * 0.95);
   }
@@ -440,8 +748,14 @@ export function generateAlgorithmicSwingPlan(tech: TechnicalSummary): {
   const keyCatalystsAndRisks: string[] = [
     `Support kunci berada di ${tech.support1} dan ${tech.support2}`,
     `Resistance target terdekat di ${tech.resistance1} (TP1) dan ${tech.resistance2} (TP2)`,
-    `Volatilitas harian (ATR 14) sebesar ${tech.atr14} poin per hari`,
-    `Volume ratio saat ini: ${tech.volumeRatio20}x vs 20 SMA`,
+    `Stochastic (14,3,3): ${tech.stochastic.k} / ${tech.stochastic.d} (${tech.stochastic.crossStatus.replace('_', ' ')})`,
+    tech.bollinger.isSqueeze
+      ? '🔥 Bollinger Band Squeeze terdeteksi: volatilitas menyempit bersiap breakout'
+      : `Bollinger Bandwidth: ${tech.bollinger.bandwidth}%`,
+    tech.detectedPattern
+      ? `Pola Candlestick: ${tech.detectedPattern.name} (${tech.detectedPattern.type})`
+      : `Volatilitas harian (ATR 14) sebesar ${tech.atr14} poin`,
+    `Volume ratio saat ini: ${tech.volumeRatio20}x vs 20 SMA | MFI (14): ${tech.mfi14.value}`,
   ];
 
   return {

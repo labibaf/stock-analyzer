@@ -57,6 +57,21 @@ export async function generateAISwingAnalysis(
       ema_200: tech.ema200,
       rsi_14: tech.rsi14,
       rsi_status: tech.rsiStatus,
+      stochastic_14_3_3: {
+        k: tech.stochastic.k,
+        d: tech.stochastic.d,
+        cross: tech.stochastic.crossStatus,
+        status: tech.stochastic.status,
+      },
+      bollinger_bands: {
+        upper: tech.bollinger.upper,
+        middle: tech.bollinger.middle,
+        lower: tech.bollinger.lower,
+        bandwidth_percent: tech.bollinger.bandwidth,
+        is_volatility_squeeze: tech.bollinger.isSqueeze,
+      },
+      mfi_14_money_flow: tech.mfi14,
+      detected_candlestick_pattern: tech.detectedPattern,
       macd_line: tech.macd.macd,
       macd_signal: tech.macd.signal,
       macd_cross: tech.macd.crossStatus,
@@ -67,6 +82,10 @@ export async function generateAISwingAnalysis(
       resistance_2: tech.resistance2,
       fifty_two_week_high: tech.quote.fiftyTwoWeekHigh,
       fifty_two_week_low: tech.quote.fiftyTwoWeekLow,
+      market_cap: tech.quote.marketCap,
+      pe_ratio: tech.quote.peRatio,
+      pbv_ratio: tech.quote.pbvRatio,
+      dividend_yield: tech.quote.dividendYield,
     };
 
     const userPrompt = `

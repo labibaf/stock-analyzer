@@ -5,8 +5,10 @@ import { SwingAnalysisResult } from '@/lib/types';
 import Header from '@/components/Header';
 import Scorecard from '@/components/Scorecard';
 import SwingPlanCard from '@/components/SwingPlanCard';
+import PositionSizeCalculator from '@/components/PositionSizeCalculator';
 import TradingViewChart from '@/components/TradingViewChart';
 import AICopilotCard from '@/components/AICopilotCard';
+import FundamentalStatsCard from '@/components/FundamentalStatsCard';
 import TechnicalIndicatorsTable from '@/components/TechnicalIndicatorsTable';
 import { AlertTriangle, RefreshCw, ShieldCheck } from 'lucide-react';
 
@@ -122,7 +124,7 @@ export default function HomePage() {
         {/* Data Display */}
         {data && (
           <div className="space-y-6">
-            {/* Top Cards: Scorecard (Metrics) & Swing Plan Card */}
+            {/* Row 1: Scorecard (Metrics) & Swing Plan Card */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left Column: Key Stats & Metric Gauges */}
               <div className="lg:col-span-6">
@@ -144,7 +146,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Middle Section: Interactive Candlestick Chart */}
+            {/* Row 2: Interactive Position Sizing & Money Management Calculator */}
+            <div>
+              <PositionSizeCalculator
+                ticker={data.ticker}
+                entryPrice={data.actionPlan.entryPrice}
+                stopLoss={data.actionPlan.stopLoss}
+                targetPrice1={data.actionPlan.targetPrice1}
+                targetPrice2={data.actionPlan.targetPrice2}
+              />
+            </div>
+
+            {/* Row 3: Interactive Candlestick Chart (with EMAs & Bollinger Bands) */}
             <div>
               <TradingViewChart
                 ticker={data.ticker}
@@ -152,15 +165,18 @@ export default function HomePage() {
                 ema20Data={data.ema20Data}
                 ema50Data={data.ema50Data}
                 ema200Data={data.ema200Data}
+                bbUpperData={data.bbUpperData}
+                bbLowerData={data.bbLowerData}
                 support1={data.technicalSummary.support1}
                 resistance1={data.technicalSummary.resistance1}
                 stopLoss={data.actionPlan.stopLoss}
                 targetPrice1={data.actionPlan.targetPrice1}
                 targetPrice2={data.actionPlan.targetPrice2}
+                isSqueeze={data.technicalSummary.bollinger.isSqueeze}
               />
             </div>
 
-            {/* Bottom Section: AI Copilot Synthesis & Complete Indicators Table */}
+            {/* Row 4: AI Copilot Synthesis & Fundamental Valuation */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7">
                 <AICopilotCard
@@ -173,8 +189,13 @@ export default function HomePage() {
               </div>
 
               <div className="lg:col-span-5">
-                <TechnicalIndicatorsTable tech={data.technicalSummary} />
+                <FundamentalStatsCard quote={data.technicalSummary.quote} />
               </div>
+            </div>
+
+            {/* Row 5: Complete Technical Indicators Table */}
+            <div>
+              <TechnicalIndicatorsTable tech={data.technicalSummary} />
             </div>
           </div>
         )}

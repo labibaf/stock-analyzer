@@ -82,6 +82,24 @@ export async function GET(request: NextRequest) {
     const companyName =
       chartResult.meta.longName || chartResult.meta.shortName || `${cleanSymbol} Tbk`;
 
+    // Fetch quote metadata for valuation multiples (PE, PBV, Dividend Yield, Market Cap)
+    let marketCap: number | undefined;
+    let peRatio: number | undefined;
+    let pbvRatio: number | undefined;
+    let dividendYield: number | undefined;
+
+    try {
+      const quoteData = await yf.quote(yahooSymbol);
+      marketCap = quoteData?.marketCap;
+      peRatio = quoteData?.trailingPE ? Number(quoteData.trailingPE.toFixed(1)) : undefined;
+      pbvRatio = quoteData?.priceToBook ? Number(quoteData.priceToBook.toFixed(2)) : undefined;
+      dividendYield = quoteData?.dividendYield
+        ? Number((quoteData.dividendYield > 1 ? quoteData.dividendYield : quoteData.dividendYield * 100).toFixed(2))
+        : undefined;
+    } catch {
+      // Graceful fallback if quote details are unavailable
+    }
+
     const quote: StockQuote = {
       ticker: cleanSymbol,
       name: companyName,
@@ -96,13 +114,21 @@ export async function GET(request: NextRequest) {
       avgVolume20: 0, // Will be computed in evaluateTechnicalSummary
       fiftyTwoWeekHigh: chartResult.meta.fiftyTwoWeekHigh ?? latestCandle.high,
       fiftyTwoWeekLow: chartResult.meta.fiftyTwoWeekLow ?? latestCandle.low,
+      marketCap,
+      peRatio,
+      pbvRatio,
+      dividendYield,
     };
 
     // 1. Deterministic Technical Calculations
-    const { summary, ema20Points, ema50Points, ema200Points } = evaluateTechnicalSummary(
-      candles,
-      quote
-    );
+    const {
+      summary,
+      ema20Points,
+      ema50Points,
+      ema200Points,
+      bbUpperPoints,
+      bbLowerPoints,
+    } = evaluateTechnicalSummary(candles, quote);
 
     // 2. Deterministic Algorithmic Plan
     const algorithmicPlan = generateAlgorithmicSwingPlan(summary);
@@ -129,6 +155,8 @@ export async function GET(request: NextRequest) {
       ema20Data: ema20Points.slice(-250),
       ema50Data: ema50Points.slice(-250),
       ema200Data: ema200Points.slice(-250),
+      bbUpperData: bbUpperPoints.slice(-250),
+      bbLowerData: bbLowerPoints.slice(-250),
     };
 
     return NextResponse.json(finalResult, {

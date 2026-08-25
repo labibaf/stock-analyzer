@@ -12,20 +12,23 @@ import {
   LineStyle,
   Time,
 } from 'lightweight-charts';
-import { CandleData, EMAPoint } from '@/lib/types';
-import { Eye, EyeOff, Layers, ZoomIn } from 'lucide-react';
+import { CandleData, LinePoint } from '@/lib/types';
+import { Eye, EyeOff, Layers, ZoomIn, Activity } from 'lucide-react';
 
 interface TradingViewChartProps {
   ticker: string;
   candles: CandleData[];
-  ema20Data: EMAPoint[];
-  ema50Data: EMAPoint[];
-  ema200Data: EMAPoint[];
+  ema20Data: LinePoint[];
+  ema50Data: LinePoint[];
+  ema200Data: LinePoint[];
+  bbUpperData?: LinePoint[];
+  bbLowerData?: LinePoint[];
   support1?: number;
   resistance1?: number;
   stopLoss?: number;
   targetPrice1?: number;
   targetPrice2?: number;
+  isSqueeze?: boolean;
 }
 
 export default function TradingViewChart({
@@ -34,11 +37,14 @@ export default function TradingViewChart({
   ema20Data,
   ema50Data,
   ema200Data,
+  bbUpperData,
+  bbLowerData,
   support1,
   resistance1,
   stopLoss,
   targetPrice1,
   targetPrice2,
+  isSqueeze,
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<IChartApi | null>(null);
@@ -47,12 +53,15 @@ export default function TradingViewChart({
   const [showEMA20, setShowEMA20] = useState(true);
   const [showEMA50, setShowEMA50] = useState(true);
   const [showEMA200, setShowEMA200] = useState(true);
+  const [showBollinger, setShowBollinger] = useState(false);
   const [showKeyLevels, setShowKeyLevels] = useState(true);
 
   // References to series instances for toggling
   const ema20SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ema50SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const ema200SeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const bbUpperSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current || candles.length === 0) return;
@@ -181,7 +190,34 @@ export default function TradingViewChart({
     ema200Series.setData(ema200Data.map((d) => ({ time: d.time as Time, value: d.value })));
     ema200SeriesRef.current = ema200Series;
 
-    // 4. Price Lines for Support, Resistance, TP, SL
+    // 4. Bollinger Bands Series (Upper & Lower Bands)
+    if (bbUpperData && bbUpperData.length > 0) {
+      const bbUpperSeries = chart.addSeries(LineSeries, {
+        color: 'rgba(56, 189, 248, 0.6)', // Sky 400
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        priceLineVisible: false,
+        title: 'BB Upper',
+        visible: showBollinger,
+      });
+      bbUpperSeries.setData(bbUpperData.map((d) => ({ time: d.time as Time, value: d.value })));
+      bbUpperSeriesRef.current = bbUpperSeries;
+    }
+
+    if (bbLowerData && bbLowerData.length > 0) {
+      const bbLowerSeries = chart.addSeries(LineSeries, {
+        color: 'rgba(56, 189, 248, 0.6)',
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        priceLineVisible: false,
+        title: 'BB Lower',
+        visible: showBollinger,
+      });
+      bbLowerSeries.setData(bbLowerData.map((d) => ({ time: d.time as Time, value: d.value })));
+      bbLowerSeriesRef.current = bbLowerSeries;
+    }
+
+    // 5. Price Lines for Support, Resistance, TP, SL
     if (showKeyLevels) {
       if (support1) {
         candleSeries.createPriceLine({
@@ -260,7 +296,7 @@ export default function TradingViewChart({
         chartInstanceRef.current = null;
       }
     };
-  }, [candles, ema20Data, ema50Data, ema200Data, showKeyLevels, showEMA20, showEMA50, showEMA200, support1, resistance1, targetPrice1, targetPrice2, stopLoss]);
+  }, [candles, ema20Data, ema50Data, ema200Data, bbUpperData, bbLowerData, showKeyLevels, showEMA20, showEMA50, showEMA200, showBollinger, support1, resistance1, targetPrice1, targetPrice2, stopLoss]);
 
   // Handle toggles dynamically
   const toggleEMA20 = () => {
@@ -281,6 +317,13 @@ export default function TradingViewChart({
     ema200SeriesRef.current?.applyOptions({ visible: next });
   };
 
+  const toggleBollinger = () => {
+    const next = !showBollinger;
+    setShowBollinger(next);
+    bbUpperSeriesRef.current?.applyOptions({ visible: next });
+    bbLowerSeriesRef.current?.applyOptions({ visible: next });
+  };
+
   const handleResetZoom = () => {
     chartInstanceRef.current?.timeScale().fitContent();
   };
@@ -294,6 +337,11 @@ export default function TradingViewChart({
           <span className="text-sm font-semibold text-slate-200">
             Interactive Daily Candlestick ({ticker}.JK)
           </span>
+          {isSqueeze && (
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+              🔥 BB Squeeze
+            </span>
+          )}
         </div>
 
         {/* Legend & Toggle Badges */}
@@ -335,6 +383,19 @@ export default function TradingViewChart({
           >
             <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />
             EMA 200
+          </button>
+
+          {/* Bollinger Bands Toggle */}
+          <button
+            onClick={toggleBollinger}
+            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 border ${
+              showBollinger
+                ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
+                : 'bg-slate-800 border-slate-700 text-slate-500'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            Bollinger (20,2)
           </button>
 
           {/* Key Levels Toggle */}

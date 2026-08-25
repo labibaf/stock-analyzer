@@ -7,7 +7,7 @@ export interface CandleData {
   volume: number;
 }
 
-export interface EMAPoint {
+export interface LinePoint {
   time: string;
   value: number;
 }
@@ -30,6 +30,7 @@ export interface StockQuote {
   peRatio?: number;
   pbvRatio?: number;
   dividendYield?: number;
+  sector?: string;
 }
 
 export type TrendStatus =
@@ -45,6 +46,35 @@ export interface MACDResult {
   crossStatus: 'BULLISH_CROSS' | 'BEARISH_CROSS' | 'NEUTRAL';
 }
 
+export interface StochasticResult {
+  k: number;
+  d: number;
+  crossStatus: 'BULLISH_CROSS' | 'BEARISH_CROSS' | 'NEUTRAL';
+  status: 'OVERSOLD' | 'HEALTHY' | 'OVERBOUGHT';
+}
+
+export interface BollingerBandsResult {
+  upper: number;
+  middle: number;
+  lower: number;
+  bandwidth: number;
+  isSqueeze: boolean;
+}
+
+export interface MFIResult {
+  value: number;
+  status: 'OVERSOLD' | 'HEALTHY' | 'OVERBOUGHT';
+}
+
+export type CandlePatternType = 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+
+export interface CandlePattern {
+  name: string;
+  type: CandlePatternType;
+  description: string;
+  reliability: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
 export interface TechnicalSummary {
   quote: StockQuote;
   ema20: number;
@@ -55,6 +85,10 @@ export interface TechnicalSummary {
   rsi14: number;
   rsiStatus: 'OVERSOLD' | 'HEALTHY_BULLISH' | 'NEUTRAL' | 'OVERBOUGHT';
   macd: MACDResult;
+  stochastic: StochasticResult;
+  bollinger: BollingerBandsResult;
+  mfi14: MFIResult;
+  detectedPattern: CandlePattern | null;
   atr14: number;
   volumeRatio20: number; // Volume today / 20-day SMA volume
   volumeSurge: boolean; // > 1.3x
@@ -95,9 +129,11 @@ export interface SwingAnalysisResult {
   modelUsed?: string;
   technicalSummary: TechnicalSummary;
   candles: CandleData[];
-  ema20Data: EMAPoint[];
-  ema50Data: EMAPoint[];
-  ema200Data: EMAPoint[];
+  ema20Data: LinePoint[];
+  ema50Data: LinePoint[];
+  ema200Data: LinePoint[];
+  bbUpperData?: LinePoint[];
+  bbLowerData?: LinePoint[];
 }
 
 export interface PopularStock {

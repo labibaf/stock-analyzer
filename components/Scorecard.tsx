@@ -11,7 +11,7 @@ import {
   Gauge,
   ArrowUpRight,
   ArrowDownRight,
-  Shield,
+  Zap,
 } from 'lucide-react';
 
 interface ScorecardProps {
@@ -35,13 +35,38 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
       <div>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span className="text-2xl sm:text-3xl font-black font-mono tracking-tight text-white">
                 {quote.ticker}
               </span>
               <span className="text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 font-semibold border border-slate-700">
                 IDX / BEI
               </span>
+
+              {/* Candlestick Pattern Badge */}
+              {tech.detectedPattern && (
+                <span
+                  className={`text-xs px-2.5 py-0.5 rounded-full font-bold border flex items-center gap-1 ${
+                    tech.detectedPattern.type === 'BULLISH'
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                      : tech.detectedPattern.type === 'BEARISH'
+                      ? 'bg-rose-500/20 border-rose-500/40 text-rose-300'
+                      : 'bg-slate-800 border-slate-700 text-slate-300'
+                  }`}
+                  title={tech.detectedPattern.description}
+                >
+                  <span>🕯️</span>
+                  <span>{tech.detectedPattern.name}</span>
+                </span>
+              )}
+
+              {/* Bollinger Squeeze Alert Badge */}
+              {tech.bollinger.isSqueeze && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold flex items-center gap-1 animate-pulse">
+                  <Flame className="w-3.5 h-3.5 text-amber-400" />
+                  <span>BB Squeeze!</span>
+                </span>
+              )}
             </div>
             <p className="text-sm text-slate-400 mt-0.5 line-clamp-1 font-medium">{quote.name}</p>
           </div>
@@ -118,11 +143,11 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
           </div>
         </div>
 
-        {/* RSI 14 */}
+        {/* RSI & MFI */}
         <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
           <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1 font-medium">
             <Gauge className="w-3.5 h-3.5 text-purple-400" />
-            <span>RSI (14) Momentum</span>
+            <span>RSI (14) & MFI</span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-base font-extrabold font-mono text-white">{tech.rsi14}</span>
@@ -143,21 +168,33 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
               {tech.rsiStatus === 'NEUTRAL' && 'Neutral'}
             </span>
           </div>
-          <div className="w-full bg-slate-800 h-1 rounded-full mt-2 overflow-hidden">
-            <div
-              className={`h-full ${
-                tech.rsi14 > 70
-                  ? 'bg-rose-500'
-                  : tech.rsi14 < 32
-                  ? 'bg-emerald-500'
-                  : 'bg-sky-400'
-              }`}
-              style={{ width: `${Math.min(tech.rsi14, 100)}%` }}
-            />
+          <div className="text-[10px] text-slate-500 mt-1 font-mono">
+            Money Flow (MFI): <span className="text-slate-300 font-semibold">{tech.mfi14.value}</span>
           </div>
         </div>
 
-        {/* Volume Spike / Activity */}
+        {/* Stochastic (14, 3, 3) */}
+        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1 font-medium">
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Stochastic (14,3,3)</span>
+          </div>
+          <div className="flex items-baseline gap-1.5 font-mono">
+            <span className="text-base font-extrabold text-white">{tech.stochastic.k}</span>
+            <span className="text-xs text-slate-500">/</span>
+            <span className="text-xs font-semibold text-slate-400">{tech.stochastic.d}</span>
+            {tech.stochastic.crossStatus === 'BULLISH_CROSS' && (
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded font-bold ml-auto">
+                Bull Cross!
+              </span>
+            )}
+          </div>
+          <div className="text-[10px] text-slate-500 mt-1 font-mono">
+            Bandwidth: <span className="text-slate-300">{tech.bollinger.bandwidth}%</span>
+          </div>
+        </div>
+
+        {/* Volume & Surge */}
         <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
           <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1 font-medium">
             <Flame className="w-3.5 h-3.5 text-amber-400" />
@@ -177,20 +214,6 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
           </div>
           <div className="text-[10px] text-slate-500 mt-1 font-mono">
             Vol: {formatVolume(quote.volume)} | Avg: {formatVolume(quote.avgVolume20)}
-          </div>
-        </div>
-
-        {/* Dynamic ATR Volatility */}
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1 font-medium">
-            <Shield className="w-3.5 h-3.5 text-emerald-400" />
-            <span>ATR 14 (Volatilitas)</span>
-          </div>
-          <div className="text-base font-extrabold font-mono text-white">
-            {formatIDR(tech.atr14)}
-          </div>
-          <div className="text-[10px] text-slate-400 mt-1">
-            Nafas fluktuasi harian ~{((tech.atr14 / quote.currentPrice) * 100).toFixed(1)}%
           </div>
         </div>
       </div>
