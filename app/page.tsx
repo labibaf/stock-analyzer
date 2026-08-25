@@ -265,12 +265,12 @@ export default function HomePage() {
               />
             </div>
             <span>
-              <strong>IDX Swing Analyzer</strong> — Real-time verified market data & deterministic math engine.
+              <strong>IDX Swing Analyzer</strong>
             </span>
           </div>
 
           <div className="text-slate-500 text-center sm:text-right">
-            <span>Riset & edukasi swing trading. Bukan ajakan transaksi keuangan mutlak.</span>
+            <span>Not financial advice</span>
           </div>
         </div>
       </footer>
