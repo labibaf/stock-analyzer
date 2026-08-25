@@ -61,23 +61,23 @@ export default function Header({
             </div>
           </div>
 
-          {/* Search Form & AI Key Settings Button */}
-          <div className="flex items-center gap-2.5 flex-1 max-w-lg sm:ml-auto">
-            <form onSubmit={handleSubmit} className="relative w-full">
+          {/* Search Form (Full Width Flex-1) & Action Buttons */}
+          <div className="flex items-center gap-2.5 flex-1 w-full sm:ml-6">
+            <form onSubmit={handleSubmit} className="relative flex-1 w-full">
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Cari kode saham (e.g. BBCA, MEDC)..."
-                className="w-full bg-[#0d121f] border border-[#1c273f] focus:border-sky-500 focus:bg-[#101726] rounded-lg pl-8 pr-16 py-1.5 text-xs text-slate-100 placeholder-slate-500 transition-colors outline-none font-mono font-semibold"
+                placeholder="Cari kode saham IHSG (contoh: BBCA, BBRI, ASII, MEDC, BREN)..."
+                className="w-full bg-[#0d121f] border border-[#1c273f] focus:border-sky-500 focus:bg-[#101726] rounded-lg pl-8 pr-16 py-2 text-xs text-slate-100 placeholder-slate-500 transition-colors outline-none font-mono font-semibold"
               />
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <button
                 type="submit"
                 disabled={isLoading}
-                className="absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-sky-600 hover:bg-sky-500 disabled:bg-[#1e2538] text-white font-semibold text-[11px] rounded-md transition-colors"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 disabled:bg-[#1e2538] text-white font-semibold text-[11px] rounded-md transition-colors"
               >
-                {isLoading ? 'Loading' : 'Analisa'}
+                {isLoading ? 'Loading...' : 'Analisa'}
               </button>
             </form>
 
