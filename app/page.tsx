@@ -149,6 +149,7 @@ export default function HomePage() {
             {/* Row 2: Interactive Position Sizing & Money Management Calculator */}
             <div>
               <PositionSizeCalculator
+                key={data.ticker}
                 ticker={data.ticker}
                 entryPrice={data.actionPlan.entryPrice}
                 stopLoss={data.actionPlan.stopLoss}
