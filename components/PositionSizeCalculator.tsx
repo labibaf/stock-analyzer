@@ -13,6 +13,8 @@ import {
   ChevronDown,
   ChevronUp,
   Target,
+  AlertTriangle,
+  Info,
 } from 'lucide-react';
 
 interface PositionSizeCalculatorProps {
@@ -46,7 +48,7 @@ export default function PositionSizeCalculator({
   const [showPriceSettings, setShowPriceSettings] = useState<boolean>(false);
   const [includeFee, setIncludeFee] = useState<boolean>(true); // Fee sekuritas: ~0.15% buy, 0.25% sell
 
-  // Calculations
+  // Validated Price Points
   const entry = Math.max(customEntry, 1);
   const sl = Math.min(customSL, entry - 1);
   const tp1 = Math.max(customTP1, entry + 1);
@@ -56,13 +58,34 @@ export default function PositionSizeCalculator({
   const target1PerShare = Math.max(tp1 - entry, 1);
   const target2PerShare = Math.max(tp2 - entry, 1);
 
+  // Cost per 1 lot (100 shares) including buy fee
+  const costPerLotGross = entry * 100;
+  const costPerLot = costPerLotGross * (includeFee ? 1.0015 : 1);
+
+  // Maximum purchasing power based on 100% available cash
+  const maxCashLots = portfolioCapital > 0 ? Math.floor(portfolioCapital / costPerLot) : 0;
+
+  // Maximum allowed risk in Rupiah
   const maxRiskRupiah = (portfolioCapital * riskPercent) / 100;
 
   // Compute calculated lots
   let activeLots = manualLots;
+  let isCashConstrained = false;
+
   if (calcMode === 'RISK_BASED') {
-    const rawShares = Math.floor(maxRiskRupiah / riskPerShare);
-    activeLots = Math.max(Math.floor(rawShares / 100), 1);
+    const rawSharesByRisk = Math.floor(maxRiskRupiah / riskPerShare);
+    const lotsByRisk = Math.floor(rawSharesByRisk / 100);
+
+    if (maxCashLots === 0) {
+      // Capital is smaller than 1 lot
+      activeLots = 0;
+    } else if (lotsByRisk > maxCashLots) {
+      // Risk tolerance would allow more shares, but cash capital limits it to maxCashLots (NEVER > 100% Cash!)
+      activeLots = maxCashLots;
+      isCashConstrained = true;
+    } else {
+      activeLots = Math.max(lotsByRisk, 1);
+    }
   }
 
   const totalShares = activeLots * 100;
@@ -74,6 +97,8 @@ export default function PositionSizeCalculator({
   const capitalAllocationPct = Number(
     ((totalCapitalRequired / (portfolioCapital || 1)) * 100).toFixed(1)
   );
+
+  const isOverBudget = totalCapitalRequired > portfolioCapital;
 
   // Stop Loss calculations
   const grossLoss = totalShares * (entry - sl);
@@ -133,7 +158,7 @@ export default function PositionSizeCalculator({
                 1 Lot = 100 Lembar
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Position Sizing presisi berbasis toleransi Stop Loss</p>
+            <p className="text-[11px] text-slate-400">Position Sizing presisi terkontrol batas maksimal modal tunai</p>
           </div>
         </div>
 
@@ -153,7 +178,7 @@ export default function PositionSizeCalculator({
           <button
             onClick={() => {
               setCalcMode('LOT_BASED');
-              setManualLots(activeLots);
+              setManualLots(Math.max(activeLots, 1));
             }}
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
               calcMode === 'LOT_BASED'
@@ -177,9 +202,14 @@ export default function PositionSizeCalculator({
               <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Modal Portofolio Trading
               </label>
-              <span className="font-mono text-sm font-black text-emerald-400 tabular-nums">
-                {formatIDR(portfolioCapital)}
-              </span>
+              <div className="text-right">
+                <span className="font-mono text-sm font-black text-emerald-400 tabular-nums">
+                  {formatIDR(portfolioCapital)}
+                </span>
+                <span className="text-[10px] text-slate-400 block font-mono">
+                  Maks Beli: <strong>{maxCashLots} Lot</strong> cash
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -226,7 +256,7 @@ export default function PositionSizeCalculator({
                   <Percent className="w-3.5 h-3.5 text-rose-400" /> Toleransi Risiko Per Trade (0.1% - 20%)
                 </label>
                 <div className="flex items-center gap-1.5 font-mono text-xs">
-                  <span className="text-slate-400 text-[11px]">Max Loss:</span>
+                  <span className="text-slate-400 text-[11px]">Max Cut Loss:</span>
                   <span className="font-bold text-rose-400 tabular-nums">
                     {formatIDR(maxRiskRupiah)} ({riskPercent.toFixed(1)}%)
                   </span>
@@ -264,17 +294,26 @@ export default function PositionSizeCalculator({
                   ))}
                 </div>
               </div>
+
+              {isCashConstrained && (
+                <div className="mt-2.5 p-2 rounded bg-sky-950/30 border border-sky-900/50 flex items-start gap-1.5 text-[11px] text-sky-300">
+                  <Info className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
+                  <span>
+                    Alokasi dibatasi maksimal <strong>{maxCashLots} Lot (100% Modal Cash)</strong> agar tidak melebihi total modal portofoliomu.
+                  </span>
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-3.5 rounded-lg bg-[#070a12] border border-[#131b2e]">
-              <label className="text-xs font-semibold text-slate-300 flex items-center justify-between mb-2">
-                <span className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-sky-400" /> Jumlah Lot yang Ingin Dibeli
-                </span>
+                </label>
                 <span className="font-mono text-xs font-bold text-sky-400 tabular-nums">
                   {manualLots} Lot ({totalShares.toLocaleString('id-ID')} Lembar)
                 </span>
-              </label>
+              </div>
 
               {/* Stepper Buttons */}
               <div className="flex items-center gap-1.5">
@@ -328,6 +367,15 @@ export default function PositionSizeCalculator({
                   +50
                 </button>
               </div>
+
+              {isOverBudget && (
+                <div className="mt-2.5 p-2 rounded bg-rose-950/40 border border-rose-900/60 flex items-center gap-1.5 text-[11px] text-rose-300 font-medium">
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span>
+                    ⚠️ Alokasi {manualLots} Lot butuh dana {formatIDR(totalCapitalRequired)} ({capitalAllocationPct}% dari modal portofoliomu).
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -433,18 +481,34 @@ export default function PositionSizeCalculator({
                 {activeLots} <span className="text-lg font-bold text-sky-400">LOT</span>
               </div>
               <div className="text-xs text-slate-400 mt-1 font-mono">
-                = {totalShares.toLocaleString('id-ID')} Lembar @ {formatIDR(entry)}
+                {activeLots > 0 ? (
+                  `= ${totalShares.toLocaleString('id-ID')} Lembar @ ${formatIDR(entry)}`
+                ) : (
+                  <span className="text-amber-400">Modal belum mencukupi untuk 1 Lot (${formatIDR(costPerLot)})</span>
+                )}
               </div>
             </div>
 
             {/* Financial Details Rows */}
             <div className="space-y-2 text-xs">
               {/* Modal Terpakai */}
-              <div className="flex items-center justify-between p-2 rounded-md bg-[#101626] border border-[#1a243c]">
+              <div
+                className={`flex items-center justify-between p-2 rounded-md border ${
+                  isOverBudget
+                    ? 'bg-rose-950/30 border-rose-800 text-rose-300'
+                    : 'bg-[#101626] border-[#1a243c]'
+                }`}
+              >
                 <span className="text-slate-400 font-medium">Total Dana Beli:</span>
                 <span className="font-mono font-bold text-white tabular-nums">
                   {formatIDR(totalCapitalRequired)}{' '}
-                  <span className="text-[10px] text-slate-400 font-normal">({capitalAllocationPct}%)</span>
+                  <span
+                    className={`text-[10px] font-semibold ${
+                      isOverBudget ? 'text-rose-400' : 'text-slate-400'
+                    }`}
+                  >
+                    ({capitalAllocationPct}%)
+                  </span>
                 </span>
               </div>
 
@@ -499,8 +563,14 @@ export default function PositionSizeCalculator({
           {/* Sisa Cash Safety Note */}
           <div className="mt-3 pt-2.5 border-t border-[#141d30] flex items-center justify-between text-xs text-slate-500">
             <span>Sisa Cash Portofolio:</span>
-            <span className="font-mono font-bold text-slate-200 tabular-nums">
-              {formatIDR(Math.max(portfolioCapital - totalCapitalRequired, 0))}
+            <span
+              className={`font-mono font-bold tabular-nums ${
+                isOverBudget ? 'text-rose-400' : 'text-slate-200'
+              }`}
+            >
+              {isOverBudget
+                ? `Kurang ${formatIDR(totalCapitalRequired - portfolioCapital)}`
+                : formatIDR(Math.max(portfolioCapital - totalCapitalRequired, 0))}
             </span>
           </div>
         </div>
