@@ -31,7 +31,7 @@ export default function Header({
 
   return (
     <header className="border-b border-[#162035] bg-[#080b13]/95 sticky top-0 z-50 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Logo & Product Title */}
           <div className="flex items-center gap-3">

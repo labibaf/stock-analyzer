@@ -91,8 +91,8 @@ export default function HomePage() {
         modelUsed={data?.modelUsed}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 space-y-4">
+      {/* Main Content Area (Full Width Fluid) */}
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 space-y-4 max-w-[1920px] mx-auto">
         {/* Error Notification */}
         {error && (
           <div className="p-3 rounded-md bg-rose-950/30 border border-rose-800/50 flex items-center justify-between gap-3 text-rose-300 text-xs">
@@ -204,8 +204,8 @@ export default function HomePage() {
       </main>
 
       {/* Footer & Disclaimer */}
-      <footer className="border-t border-[#161c2c] bg-[#07080c] mt-8 py-4 text-slate-500 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+      <footer className="border-t border-[#141d30] bg-[#07080c] mt-8 py-4 text-slate-500 text-xs">
+        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
             <span>
