@@ -1,34 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070a12;
-  --foreground: #f8fafc;
+  --bg-main: #090a0f;
+  --bg-surface: #0e111a;
+  --bg-surface-raised: #141824;
+  --border-subtle: #1c2234;
+  --border-medium: #273148;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
 }
 
 body {
-  background-color: #070a12;
-  color: #f8fafc;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom sleek dark scrollbar */
+/* Tabular numbers for financial data alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom crisp dark scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #090a0f;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 9999px;
+  background: #1e2538;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #2d3752;
 }
 
 .no-scrollbar::-webkit-scrollbar {

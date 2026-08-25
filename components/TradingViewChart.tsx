@@ -329,95 +329,95 @@ export default function TradingViewChart({
   };
 
   return (
-    <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 md:p-5 backdrop-blur-md shadow-xl">
+    <div className="bg-[#0e121d] border border-[#1c2438] rounded-lg p-4">
       {/* Chart Top Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 pb-2.5 border-b border-[#182032]">
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-sky-400" />
-          <span className="text-sm font-semibold text-slate-200">
-            Interactive Daily Candlestick ({ticker}.JK)
+          <Layers className="w-3.5 h-3.5 text-sky-400" />
+          <span className="text-xs font-semibold text-slate-200">
+            Daily Candlestick ({ticker}.JK)
           </span>
           {isSqueeze && (
-            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+            <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800 flex items-center gap-1">
               🔥 BB Squeeze
             </span>
           )}
         </div>
 
         {/* Legend & Toggle Badges */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* EMA 20 */}
           <button
             onClick={toggleEMA20}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 border ${
+            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
               showEMA20
-                ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+                ? 'bg-amber-950/50 border-amber-800/80 text-amber-300'
+                : 'bg-[#101420] border-[#1a2236] text-slate-500 line-through'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
             EMA 20
           </button>
 
           {/* EMA 50 */}
           <button
             onClick={toggleEMA50}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 border ${
+            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
               showEMA50
-                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+                ? 'bg-cyan-950/50 border-cyan-800/80 text-cyan-300'
+                : 'bg-[#101420] border-[#1a2236] text-slate-500 line-through'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-cyan-400 inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
             EMA 50
           </button>
 
           {/* EMA 200 */}
           <button
             onClick={toggleEMA200}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 border ${
+            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
               showEMA200
-                ? 'bg-purple-500/15 border-purple-500/40 text-purple-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500 line-through'
+                ? 'bg-purple-950/50 border-purple-800/80 text-purple-300'
+                : 'bg-[#101420] border-[#1a2236] text-slate-500 line-through'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block" />
             EMA 200
           </button>
 
           {/* Bollinger Bands Toggle */}
           <button
             onClick={toggleBollinger}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 border ${
+            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
               showBollinger
-                ? 'bg-sky-500/15 border-sky-500/40 text-sky-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500'
+                ? 'bg-sky-950/50 border-sky-800/80 text-sky-300'
+                : 'bg-[#101420] border-[#1a2236] text-slate-400'
             }`}
           >
-            <Activity className="w-3.5 h-3.5" />
-            Bollinger (20,2)
+            <Activity className="w-3 h-3" />
+            Bollinger
           </button>
 
           {/* Key Levels Toggle */}
           <button
             onClick={() => setShowKeyLevels(!showKeyLevels)}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5 border ${
+            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
               showKeyLevels
-                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                : 'bg-slate-800 border-slate-700 text-slate-500'
+                ? 'bg-emerald-950/50 border-emerald-800/80 text-emerald-300'
+                : 'bg-[#101420] border-[#1a2236] text-slate-400'
             }`}
           >
-            {showKeyLevels ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            Levels & Targets
+            {showKeyLevels ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            Levels
           </button>
 
           {/* Fit Zoom */}
           <button
             onClick={handleResetZoom}
             title="Reset Zoom"
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors"
+            className="p-1 rounded bg-[#101420] hover:bg-[#151b2c] border border-[#1a2236] text-slate-400 hover:text-white transition-colors"
           >
-            <ZoomIn className="w-3.5 h-3.5" />
+            <ZoomIn className="w-3 h-3" />
           </button>
         </div>
       </div>
@@ -425,13 +425,13 @@ export default function TradingViewChart({
       {/* Chart Canvas Container */}
       <div
         ref={chartContainerRef}
-        className="w-full rounded-xl overflow-hidden relative"
-        style={{ minHeight: '480px' }}
+        className="w-full rounded overflow-hidden relative"
+        style={{ minHeight: '460px' }}
       />
 
-      <div className="flex items-center justify-between text-xs text-slate-500 mt-3 pt-2 border-t border-slate-800/60">
-        <span>Gunakan scroll mouse / pinch untuk zoom in-out, klik-geser untuk menggeser rentang waktu.</span>
-        <span className="font-mono">Timeframe: 1D (Daily)</span>
+      <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2.5 pt-2 border-t border-[#161c2c]">
+        <span>Scroll / pinch untuk zoom, geser untuk navigasi waktu.</span>
+        <span className="font-mono">Timeframe: 1D</span>
       </div>
     </div>
   );

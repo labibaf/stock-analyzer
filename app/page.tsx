@@ -81,7 +81,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#090a0f]">
       {/* Top Navigation & Quick Stock Chips */}
       <Header
         currentTicker={ticker}
@@ -92,19 +92,19 @@ export default function HomePage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-4 space-y-4">
         {/* Error Notification */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-950/40 border border-rose-800/60 backdrop-blur-md flex items-center justify-between gap-3 text-rose-200 text-sm">
-            <div className="flex items-center gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+          <div className="p-3 rounded-md bg-rose-950/30 border border-rose-800/50 flex items-center justify-between gap-3 text-rose-300 text-xs">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{error}</span>
             </div>
             <button
               onClick={() => fetchAnalysis(ticker)}
-              className="px-3 py-1.5 rounded-xl bg-rose-900/60 hover:bg-rose-800 border border-rose-700 text-xs font-semibold text-white transition-all flex items-center gap-1.5"
+              className="px-2.5 py-1 rounded bg-rose-900/50 hover:bg-rose-900 border border-rose-750 text-xs font-medium text-white transition-colors flex items-center gap-1"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3 h-3" />
               Coba Lagi
             </button>
           </div>
@@ -112,20 +112,21 @@ export default function HomePage() {
 
         {/* Loading Skeleton */}
         {isLoading && !data && (
-          <div className="space-y-6 animate-pulse">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="h-64 rounded-2xl bg-slate-900/80 border border-slate-800" />
-              <div className="h-64 rounded-2xl bg-slate-900/80 border border-slate-800" />
+          <div className="space-y-4 animate-pulse">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="h-56 rounded-lg bg-[#0e121d] border border-[#1c2438]" />
+              <div className="h-56 rounded-lg bg-[#0e121d] border border-[#1c2438]" />
             </div>
-            <div className="h-[480px] rounded-2xl bg-slate-900/80 border border-slate-800" />
+            <div className="h-44 rounded-lg bg-[#0e121d] border border-[#1c2438]" />
+            <div className="h-[460px] rounded-lg bg-[#0e121d] border border-[#1c2438]" />
           </div>
         )}
 
         {/* Data Display */}
         {data && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Row 1: Scorecard (Metrics) & Swing Plan Card */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Left Column: Key Stats & Metric Gauges */}
               <div className="lg:col-span-6">
                 <Scorecard quote={data.technicalSummary.quote} tech={data.technicalSummary} />
@@ -178,7 +179,7 @@ export default function HomePage() {
             </div>
 
             {/* Row 4: AI Copilot Synthesis & Fundamental Valuation */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className="lg:col-span-7">
                 <AICopilotCard
                   ticker={data.ticker}
@@ -203,21 +204,17 @@ export default function HomePage() {
       </main>
 
       {/* Footer & Disclaimer */}
-      <footer className="border-t border-slate-900 bg-slate-950/60 mt-12 py-6 text-slate-500 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-sky-400" />
+      <footer className="border-t border-[#161c2c] bg-[#07080c] mt-8 py-4 text-slate-500 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
             <span>
-              <strong>IDX Swing Analyzer</strong> — Analisis data real-time berbasis kalkulasi
-              matematika presisi & Google Gemini Free Tier.
+              <strong>IDX Swing Analyzer</strong> — Real-time verified market data & deterministic math engine.
             </span>
           </div>
 
           <div className="text-slate-500 text-center sm:text-right">
-            <span>
-              Disclaimer: Aplikasi ini untuk tujuan riset & edukasi teknikal. Bukan ajakan beli/jual
-              mutlak.
-            </span>
+            <span>Riset & edukasi swing trading. Bukan ajakan transaksi keuangan mutlak.</span>
           </div>
         </div>
       </footer>
