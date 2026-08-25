@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# internal specification docs
+DESIGN.md
+PRD.md
+SWING_ANALYZER_SPEC.md
