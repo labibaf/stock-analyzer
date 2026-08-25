@@ -133,7 +133,7 @@ export default function Header({
                 {hasCustomKey || isAIGenerated ? (
                   <>
                     <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>AI: {activeProviderName || 'Gemini'}</span>
+                    <span>Connected To: {activeProviderName || 'Gemini'}</span>
                   </>
                 ) : (
                   <>
