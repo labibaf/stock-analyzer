@@ -1,5 +1,7 @@
+export type ChartTimeframe = '15m' | '1h' | '1d' | '1wk' | '1mo';
+
 export interface CandleData {
-  time: string; // YYYY-MM-DD
+  time: string | number; // YYYY-MM-DD or Unix timestamp in seconds
   open: number;
   high: number;
   low: number;
@@ -8,7 +10,7 @@ export interface CandleData {
 }
 
 export interface LinePoint {
-  time: string;
+  time: string | number;
   value: number;
 }
 

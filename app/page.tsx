@@ -162,6 +162,7 @@ export default function HomePage() {
             {/* Row 3: Interactive Candlestick Chart (with EMAs & Bollinger Bands) */}
             <div>
               <TradingViewChart
+                key={data.ticker}
                 ticker={data.ticker}
                 candles={data.candles}
                 ema20Data={data.ema20Data}

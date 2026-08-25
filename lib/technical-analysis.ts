@@ -87,8 +87,8 @@ export function calculateMACD(candles: CandleData[]): MACDResult {
   const ema12 = calculateEMA(candles, 12);
   const ema26 = calculateEMA(candles, 26);
 
-  const macdLineSeries: { time: string; value: number }[] = [];
-  const ema26Map = new Map<string, number>();
+  const macdLineSeries: LinePoint[] = [];
+  const ema26Map = new Map<string | number, number>();
   ema26.forEach((item) => ema26Map.set(item.time, item.value));
 
   for (const item12 of ema12) {

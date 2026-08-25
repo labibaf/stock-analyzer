@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   createChart,
   ColorType,
@@ -12,8 +12,8 @@ import {
   LineStyle,
   Time,
 } from 'lightweight-charts';
-import { CandleData, LinePoint } from '@/lib/types';
-import { Eye, EyeOff, Layers, ZoomIn, Activity } from 'lucide-react';
+import { CandleData, LinePoint, ChartTimeframe } from '@/lib/types';
+import { Eye, EyeOff, Layers, ZoomIn, Activity, Clock, Loader2 } from 'lucide-react';
 
 interface TradingViewChartProps {
   ticker: string;
@@ -31,14 +31,22 @@ interface TradingViewChartProps {
   isSqueeze?: boolean;
 }
 
+const TIMEFRAME_OPTIONS: { label: string; value: ChartTimeframe; title: string }[] = [
+  { label: '15m', value: '15m', title: '15 Menit (Intraday Momentum)' },
+  { label: '1h', value: '1h', title: '1 Jam (Short-term Swing)' },
+  { label: '1D', value: '1d', title: 'Daily (Primary Swing Trading)' },
+  { label: '1W', value: '1wk', title: 'Weekly (Major Multi-month Trend)' },
+  { label: '1M', value: '1mo', title: 'Monthly (Macro Multi-year Structure)' },
+];
+
 export default function TradingViewChart({
   ticker,
-  candles,
-  ema20Data,
-  ema50Data,
-  ema200Data,
-  bbUpperData,
-  bbLowerData,
+  candles: initialCandles,
+  ema20Data: initialEma20,
+  ema50Data: initialEma50,
+  ema200Data: initialEma200,
+  bbUpperData: initialBbUpper,
+  bbLowerData: initialBbLower,
   support1,
   resistance1,
   stopLoss,
@@ -48,6 +56,18 @@ export default function TradingViewChart({
 }: TradingViewChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<IChartApi | null>(null);
+
+  // Timeframe state
+  const [selectedTimeframe, setSelectedTimeframe] = useState<ChartTimeframe>('1d');
+  const [isLoadingTimeframe, setIsLoadingTimeframe] = useState(false);
+
+  // Active chart data
+  const [activeCandles, setActiveCandles] = useState<CandleData[]>(initialCandles);
+  const [activeEma20, setActiveEma20] = useState<LinePoint[]>(initialEma20);
+  const [activeEma50, setActiveEma50] = useState<LinePoint[]>(initialEma50);
+  const [activeEma200, setActiveEma200] = useState<LinePoint[]>(initialEma200);
+  const [activeBbUpper, setActiveBbUpper] = useState<LinePoint[] | undefined>(initialBbUpper);
+  const [activeBbLower, setActiveBbLower] = useState<LinePoint[] | undefined>(initialBbLower);
 
   // Layer Visibility Toggles
   const [showEMA20, setShowEMA20] = useState(true);
@@ -63,8 +83,56 @@ export default function TradingViewChart({
   const bbUpperSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   const bbLowerSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
 
+
+
+  // Fetch timeframe candles
+  const handleSelectTimeframe = useCallback(
+    async (tf: ChartTimeframe) => {
+      if (tf === selectedTimeframe) return;
+      setSelectedTimeframe(tf);
+
+      if (tf === '1d') {
+        setActiveCandles(initialCandles);
+        setActiveEma20(initialEma20);
+        setActiveEma50(initialEma50);
+        setActiveEma200(initialEma200);
+        setActiveBbUpper(initialBbUpper);
+        setActiveBbLower(initialBbLower);
+        return;
+      }
+
+      setIsLoadingTimeframe(true);
+      try {
+        const res = await fetch(`/api/candles?ticker=${ticker}&interval=${tf}`);
+        const data = await res.json();
+        if (data.candles && data.candles.length > 0) {
+          setActiveCandles(data.candles);
+          setActiveEma20(data.ema20 || []);
+          setActiveEma50(data.ema50 || []);
+          setActiveEma200(data.ema200 || []);
+          setActiveBbUpper(data.bbUpper || []);
+          setActiveBbLower(data.bbLower || []);
+        }
+      } catch (err) {
+        console.error('Failed to load timeframe candles:', err);
+      } finally {
+        setIsLoadingTimeframe(false);
+      }
+    },
+    [
+      selectedTimeframe,
+      ticker,
+      initialCandles,
+      initialEma20,
+      initialEma50,
+      initialEma200,
+      initialBbUpper,
+      initialBbLower,
+    ]
+  );
+
   useEffect(() => {
-    if (!chartContainerRef.current || candles.length === 0) return;
+    if (!chartContainerRef.current || activeCandles.length === 0) return;
 
     // Clean up previous instance
     if (chartInstanceRef.current) {
@@ -73,6 +141,8 @@ export default function TradingViewChart({
     }
 
     const container = chartContainerRef.current;
+
+    const isIntraday = selectedTimeframe === '15m' || selectedTimeframe === '1h';
 
     const chart = createChart(container, {
       width: container.clientWidth,
@@ -110,7 +180,7 @@ export default function TradingViewChart({
       },
       timeScale: {
         borderColor: '#1e293b',
-        timeVisible: true,
+        timeVisible: isIntraday,
         secondsVisible: false,
       },
     });
@@ -127,7 +197,7 @@ export default function TradingViewChart({
       wickDownColor: '#f43f5e',
     });
 
-    const candleChartData = candles.map((c) => ({
+    const candleChartData = activeCandles.map((c) => ({
       time: c.time as Time,
       open: c.open,
       high: c.high,
@@ -149,95 +219,78 @@ export default function TradingViewChart({
       },
     });
 
-    const volumeChartData = candles.map((c) => ({
+    const volumeChartData = activeCandles.map((c) => ({
       time: c.time as Time,
       value: c.volume,
-      color: c.close >= c.open ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)',
+      color: c.close >= c.open ? 'rgba(16, 185, 129, 0.25)' : 'rgba(244, 63, 94, 0.25)',
     }));
     volumeSeries.setData(volumeChartData);
 
-    // 3. EMA Series
-    // EMA 20 (Amber/Yellow)
+    // 3. EMA 20 (Amber)
     const ema20Series = chart.addSeries(LineSeries, {
       color: '#f59e0b',
       lineWidth: 2,
-      priceLineVisible: false,
       title: 'EMA 20',
       visible: showEMA20,
     });
-    ema20Series.setData(ema20Data.map((d) => ({ time: d.time as Time, value: d.value })));
+    ema20Series.setData(activeEma20.map((p) => ({ time: p.time as Time, value: p.value })));
     ema20SeriesRef.current = ema20Series;
 
-    // EMA 50 (Cyan)
+    // 4. EMA 50 (Cyan)
     const ema50Series = chart.addSeries(LineSeries, {
       color: '#06b6d4',
       lineWidth: 2,
-      priceLineVisible: false,
       title: 'EMA 50',
       visible: showEMA50,
     });
-    ema50Series.setData(ema50Data.map((d) => ({ time: d.time as Time, value: d.value })));
+    ema50Series.setData(activeEma50.map((p) => ({ time: p.time as Time, value: p.value })));
     ema50SeriesRef.current = ema50Series;
 
-    // EMA 200 (Purple)
+    // 5. EMA 200 (Purple)
     const ema200Series = chart.addSeries(LineSeries, {
       color: '#a855f7',
       lineWidth: 2,
-      priceLineVisible: false,
       title: 'EMA 200',
       visible: showEMA200,
     });
-    ema200Series.setData(ema200Data.map((d) => ({ time: d.time as Time, value: d.value })));
+    ema200Series.setData(activeEma200.map((p) => ({ time: p.time as Time, value: p.value })));
     ema200SeriesRef.current = ema200Series;
 
-    // 4. Bollinger Bands Series (Upper & Lower Bands)
-    if (bbUpperData && bbUpperData.length > 0) {
+    // 6. Bollinger Bands Upper & Lower (Sky Blue Dashed)
+    if (activeBbUpper && activeBbUpper.length > 0) {
       const bbUpperSeries = chart.addSeries(LineSeries, {
-        color: 'rgba(56, 189, 248, 0.6)', // Sky 400
+        color: '#38bdf8',
         lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        priceLineVisible: false,
+        lineStyle: LineStyle.Dotted,
         title: 'BB Upper',
         visible: showBollinger,
       });
-      bbUpperSeries.setData(bbUpperData.map((d) => ({ time: d.time as Time, value: d.value })));
+      bbUpperSeries.setData(activeBbUpper.map((p) => ({ time: p.time as Time, value: p.value })));
       bbUpperSeriesRef.current = bbUpperSeries;
     }
 
-    if (bbLowerData && bbLowerData.length > 0) {
+    if (activeBbLower && activeBbLower.length > 0) {
       const bbLowerSeries = chart.addSeries(LineSeries, {
-        color: 'rgba(56, 189, 248, 0.6)',
+        color: '#38bdf8',
         lineWidth: 1,
-        lineStyle: LineStyle.Dashed,
-        priceLineVisible: false,
+        lineStyle: LineStyle.Dotted,
         title: 'BB Lower',
         visible: showBollinger,
       });
-      bbLowerSeries.setData(bbLowerData.map((d) => ({ time: d.time as Time, value: d.value })));
+      bbLowerSeries.setData(activeBbLower.map((p) => ({ time: p.time as Time, value: p.value })));
       bbLowerSeriesRef.current = bbLowerSeries;
     }
 
-    // 5. Price Lines for Support, Resistance, TP, SL
+    // 7. Key Horizontal Price Levels (Support, Resistance, SL, TP)
     if (showKeyLevels) {
-      if (support1) {
+      if (targetPrice2) {
         candleSeries.createPriceLine({
-          price: support1,
+          price: targetPrice2,
           color: '#10b981',
-          lineWidth: 1,
+          lineWidth: 2,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `Support (${support1})`,
-        });
-      }
-
-      if (resistance1) {
-        candleSeries.createPriceLine({
-          price: resistance1,
-          color: '#ef4444',
-          lineWidth: 1,
-          lineStyle: LineStyle.Dashed,
-          axisLabelVisible: true,
-          title: `Resistance (${resistance1})`,
+          title: 'TP2 Target',
         });
       }
 
@@ -246,20 +299,31 @@ export default function TradingViewChart({
           price: targetPrice1,
           color: '#34d399',
           lineWidth: 2,
-          lineStyle: LineStyle.Solid,
+          lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `🎯 TP 1 (${targetPrice1})`,
+          title: 'TP1 Target',
         });
       }
 
-      if (targetPrice2) {
+      if (resistance1 && resistance1 !== targetPrice1) {
         candleSeries.createPriceLine({
-          price: targetPrice2,
-          color: '#10b981',
+          price: resistance1,
+          color: '#fbbf24',
           lineWidth: 1,
-          lineStyle: LineStyle.Dashed,
+          lineStyle: LineStyle.Dotted,
           axisLabelVisible: true,
-          title: `🎯 TP 2 (${targetPrice2})`,
+          title: 'R1 Resisten',
+        });
+      }
+
+      if (support1) {
+        candleSeries.createPriceLine({
+          price: support1,
+          color: '#38bdf8',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: 'S1 Support',
         });
       }
 
@@ -270,15 +334,15 @@ export default function TradingViewChart({
           lineWidth: 2,
           lineStyle: LineStyle.Solid,
           axisLabelVisible: true,
-          title: `🛑 Stop Loss (${stopLoss})`,
+          title: 'Stop Loss',
         });
       }
     }
 
-    // Auto-fit content
+    // Fit content into viewport smoothly
     chart.timeScale().fitContent();
 
-    // Resize Observer
+    // Responsive window resize observer
     const handleResize = () => {
       if (chartContainerRef.current && chartInstanceRef.current) {
         chartInstanceRef.current.applyOptions({
@@ -296,144 +360,195 @@ export default function TradingViewChart({
         chartInstanceRef.current = null;
       }
     };
-  }, [candles, ema20Data, ema50Data, ema200Data, bbUpperData, bbLowerData, showKeyLevels, showEMA20, showEMA50, showEMA200, showBollinger, support1, resistance1, targetPrice1, targetPrice2, stopLoss]);
-
-  // Handle toggles dynamically
-  const toggleEMA20 = () => {
-    const next = !showEMA20;
-    setShowEMA20(next);
-    ema20SeriesRef.current?.applyOptions({ visible: next });
-  };
-
-  const toggleEMA50 = () => {
-    const next = !showEMA50;
-    setShowEMA50(next);
-    ema50SeriesRef.current?.applyOptions({ visible: next });
-  };
-
-  const toggleEMA200 = () => {
-    const next = !showEMA200;
-    setShowEMA200(next);
-    ema200SeriesRef.current?.applyOptions({ visible: next });
-  };
-
-  const toggleBollinger = () => {
-    const next = !showBollinger;
-    setShowBollinger(next);
-    bbUpperSeriesRef.current?.applyOptions({ visible: next });
-    bbLowerSeriesRef.current?.applyOptions({ visible: next });
-  };
+  }, [
+    activeCandles,
+    activeEma20,
+    activeEma50,
+    activeEma200,
+    activeBbUpper,
+    activeBbLower,
+    showEMA20,
+    showEMA50,
+    showEMA200,
+    showBollinger,
+    showKeyLevels,
+    support1,
+    resistance1,
+    stopLoss,
+    targetPrice1,
+    targetPrice2,
+    selectedTimeframe,
+  ]);
 
   const handleResetZoom = () => {
-    chartInstanceRef.current?.timeScale().fitContent();
+    if (chartInstanceRef.current) {
+      chartInstanceRef.current.timeScale().fitContent();
+    }
   };
 
   return (
     <div className="bg-[#0b0f19] border border-[#162035] rounded-xl p-4 sm:p-5 shadow-lg">
       {/* Chart Top Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 pb-3 border-b border-[#141d30]">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
-            <Layers className="w-3.5 h-3.5 text-sky-400" />
-          </div>
-          <span className="text-xs sm:text-sm font-bold text-slate-200">
-            Interactive Daily Candlestick ({ticker}.JK)
-          </span>
-          {isSqueeze && (
-            <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800 flex items-center gap-1">
-              🔥 BB Squeeze
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#131b2e] border border-[#1f2d4d] flex items-center justify-center">
+              <Layers className="w-3.5 h-3.5 text-sky-400" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-slate-200">
+              Interactive Candlestick ({ticker}.JK)
             </span>
-          )}
+            {isSqueeze && (
+              <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800 flex items-center gap-1">
+                🔥 Squeeze
+              </span>
+            )}
+          </div>
+
+          {/* Timeframe Selector Pills */}
+          <div className="flex items-center bg-[#070a12] p-1 rounded-lg border border-[#131b2e] text-xs">
+            <span className="text-[10px] text-slate-500 font-mono px-1.5 hidden sm:inline flex items-center gap-1">
+              <Clock className="w-3 h-3 text-slate-400" /> TF:
+            </span>
+            {TIMEFRAME_OPTIONS.map((tf) => (
+              <button
+                key={tf.value}
+                onClick={() => handleSelectTimeframe(tf.value)}
+                disabled={isLoadingTimeframe}
+                title={tf.title}
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-bold transition-all ${
+                  selectedTimeframe === tf.value
+                    ? 'bg-sky-600 text-white shadow'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#131b2e]'
+                }`}
+              >
+                {tf.label}
+              </button>
+            ))}
+            {isLoadingTimeframe && (
+              <Loader2 className="w-3 h-3 text-sky-400 animate-spin ml-1.5 mr-1" />
+            )}
+          </div>
         </div>
 
-        {/* Legend & Toggle Badges */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {/* EMA 20 */}
+        {/* Indicators Overlay Toggles & Reset Zoom */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          {/* EMA 20 Toggle */}
           <button
-            onClick={toggleEMA20}
-            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
+            onClick={() => setShowEMA20(!showEMA20)}
+            className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold border transition-colors flex items-center gap-1 ${
               showEMA20
-                ? 'bg-amber-950/50 border-amber-800/80 text-amber-300'
-                : 'bg-[#101420] border-[#1a2236] text-slate-500 line-through'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+                : 'bg-[#101420] text-slate-500 border-[#1a2236]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-            EMA 20
+            {showEMA20 ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            <span>EMA 20</span>
           </button>
 
-          {/* EMA 50 */}
+          {/* EMA 50 Toggle */}
           <button
-            onClick={toggleEMA50}
-            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
+            onClick={() => setShowEMA50(!showEMA50)}
+            className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold border transition-colors flex items-center gap-1 ${
               showEMA50
-                ? 'bg-cyan-950/50 border-cyan-800/80 text-cyan-300'
-                : 'bg-[#101420] border-[#1a2236] text-slate-500 line-through'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+                : 'bg-[#101420] text-slate-500 border-[#1a2236]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block" />
-            EMA 50
+            {showEMA50 ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            <span>EMA 50</span>
           </button>
 
-          {/* EMA 200 */}
+          {/* EMA 200 Toggle */}
           <button
-            onClick={toggleEMA200}
-            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
+            onClick={() => setShowEMA200(!showEMA200)}
+            className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold border transition-colors flex items-center gap-1 ${
               showEMA200
-                ? 'bg-purple-950/50 border-purple-800/80 text-purple-300'
-                : 'bg-[#101420] border-[#1a2236] text-slate-500 line-through'
+                ? 'bg-purple-500/20 text-purple-300 border-purple-500/50'
+                : 'bg-[#101420] text-slate-500 border-[#1a2236]'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block" />
-            EMA 200
+            {showEMA200 ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            <span>EMA 200</span>
           </button>
 
           {/* Bollinger Bands Toggle */}
           <button
-            onClick={toggleBollinger}
-            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
+            onClick={() => setShowBollinger(!showBollinger)}
+            className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold border transition-colors flex items-center gap-1 ${
               showBollinger
-                ? 'bg-sky-950/50 border-sky-800/80 text-sky-300'
-                : 'bg-[#101420] border-[#1a2236] text-slate-400'
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/50'
+                : 'bg-[#101420] text-slate-500 border-[#1a2236]'
             }`}
           >
-            <Activity className="w-3 h-3" />
-            Bollinger
+            {showBollinger ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+            <span>Bollinger (20,2)</span>
           </button>
 
           {/* Key Levels Toggle */}
           <button
             onClick={() => setShowKeyLevels(!showKeyLevels)}
-            className={`px-2 py-0.5 text-[11px] rounded font-medium transition-colors flex items-center gap-1 border ${
+            className={`px-2 py-1 rounded-md font-mono text-[11px] font-semibold border transition-colors flex items-center gap-1 ${
               showKeyLevels
-                ? 'bg-emerald-950/50 border-emerald-800/80 text-emerald-300'
-                : 'bg-[#101420] border-[#1a2236] text-slate-400'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50'
+                : 'bg-[#101420] text-slate-500 border-[#1a2236]'
             }`}
           >
             {showKeyLevels ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-            Levels
+            <span>Level SL/TP</span>
           </button>
 
-          {/* Fit Zoom */}
+          {/* Reset Zoom Button */}
           <button
             onClick={handleResetZoom}
-            title="Reset Zoom"
-            className="p-1 rounded bg-[#101420] hover:bg-[#151b2c] border border-[#1a2236] text-slate-400 hover:text-white transition-colors"
+            className="px-2 py-1 bg-[#101420] hover:bg-[#161c2c] border border-[#1a2236] text-slate-400 hover:text-slate-200 rounded-md transition-colors flex items-center gap-1 font-mono text-[11px]"
+            title="Reset Zoom Chart"
           >
             <ZoomIn className="w-3 h-3" />
+            <span>Reset</span>
           </button>
         </div>
       </div>
 
-      {/* Chart Canvas Container */}
+      {/* Chart Canvas */}
       <div
         ref={chartContainerRef}
-        className="w-full rounded overflow-hidden relative"
-        style={{ minHeight: '460px' }}
+        className="w-full rounded-lg overflow-hidden border border-[#131b2e] bg-[#090d16]"
       />
 
-      <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2.5 pt-2 border-t border-[#161c2c]">
-        <span>Scroll / pinch untuk zoom, geser untuk navigasi waktu.</span>
-        <span className="font-mono">Timeframe: 1D</span>
+      {/* Legend and Indicator Notes */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-2 border-t border-[#141d30] text-[11px] text-slate-400">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-amber-400 inline-block" />
+            <span>EMA 20</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-cyan-400 inline-block" />
+            <span>EMA 50</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-purple-400 inline-block" />
+            <span>EMA 200</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-sky-400 border-b border-dashed inline-block" />
+            <span>Bollinger Bands</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-emerald-400 inline-block" />
+            <span>TP1 / TP2 Target</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-0.5 bg-rose-500 inline-block" />
+            <span>Stop Loss</span>
+          </div>
+        </div>
+
+        <div className="text-slate-500 flex items-center gap-1">
+          <Activity className="w-3 h-3 text-sky-400" />
+          <span>TradingView Lightweight Canvas • Interactive Pan & Zoom</span>
+        </div>
       </div>
     </div>
   );
