@@ -262,23 +262,46 @@ export default function AISettingsModal({
             <p className="text-[10px] text-slate-400">{currentProviderConfig.apiKeyHelpText}</p>
           </div>
 
-          {/* Model Selector */}
-          <div className="space-y-1.5">
-            <label className="text-slate-300 font-semibold flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-purple-400" />
-              Pilih Model AI:
-            </label>
-            <select
+          {/* Model Text Input & Clickable Updated Example Chips */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-300 font-semibold flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-purple-400" />
+                Nama Model AI:
+              </label>
+              <span className="text-[10px] text-slate-400">Bebas ketik model apa saja</span>
+            </div>
+
+            <input
+              type="text"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
+              placeholder={currentProviderConfig.modelPlaceholder}
               className="w-full bg-[#070a12] border border-[#19243c] focus:border-sky-500 rounded-lg px-3 py-2 text-xs font-mono text-white outline-none"
-            >
-              {currentProviderConfig.availableModels.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} {m.isDefault ? '(Default Rekomendasi)' : ''}
-                </option>
-              ))}
-            </select>
+            />
+
+            {/* Clickable Example Model Chips */}
+            <div>
+              <span className="text-[10px] text-slate-400 block mb-1">
+                Contoh Model Terkini (Klik untuk mengisi):
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {currentProviderConfig.exampleModels.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedModel(m.id)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors border ${
+                      selectedModel === m.id
+                        ? 'bg-purple-950/80 border-purple-500 text-purple-200 font-bold shadow-sm'
+                        : 'bg-[#070a12] hover:bg-[#141b2c] border-[#1a253c] text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {m.label} {m.isDefault ? '⭐' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Test Status Banner */}
