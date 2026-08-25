@@ -265,12 +265,12 @@ export default function HomePage() {
               />
             </div>
             <span>
-              <strong>IDX Swing Analyzer</strong>
+              <strong>IDX Swing Analyzer</strong> • © {new Date().getFullYear()} <strong>LAF</strong>. All rights reserved.
             </span>
           </div>
 
           <div className="text-slate-500 text-center sm:text-right">
-            <span>Not financial advice</span>
+            <span>Only Research, Not Financial Advice</span>
           </div>
         </div>
       </footer>
