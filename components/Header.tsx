@@ -58,9 +58,6 @@ export default function Header({
                 <span className="text-sky-400 font-normal">Swing Analyzer</span>
               </h1>
             </div>
-            <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-[#131b2e] border border-[#1f2d4d] text-sky-300">
-              IHSG / BEI
-            </span>
           </div>
 
           {/* Search Form & AI Key Settings Button */}

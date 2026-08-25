@@ -152,7 +152,7 @@ export default function PositionSizeCalculator({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                Simulasi Eksekusi & Manajemen Lot ({ticker}.JK)
+                Simulasi Buy & Manajemen Lot ({ticker}.JK)
               </h4>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#131b2e] text-sky-300 border border-[#1f2d4d] font-semibold">
                 1 Lot = 100 Lembar

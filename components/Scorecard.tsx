@@ -44,9 +44,6 @@ export default function Scorecard({ quote, tech }: ScorecardProps) {
               <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-white">
                 {quote.ticker}
               </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-[#131b2e] text-sky-400 font-mono font-semibold border border-[#1f2d4d]">
-                IDX / BEI
-              </span>
               {tech.consensus && (
                 <span
                   className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
