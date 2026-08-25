@@ -78,7 +78,7 @@ export default function Header({
                 ) : (
                   <Cpu className="w-3 h-3 text-slate-400" />
                 )}
-                <span>{hasCustomKey || isAIGenerated ? 'AI' : 'Algo'}</span>
+                <span>{hasCustomKey || isAIGenerated ? `Connected To: ${activeProviderName || 'Gemini'}` : 'Algo Mode'}</span>
                 <Settings className="w-2.5 h-2.5 text-slate-400 opacity-70" />
               </button>
 
